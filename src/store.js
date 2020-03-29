@@ -5,7 +5,7 @@ Vue.use(Vuex)
 
 let main = 'http://localhost:3000'
 if (process.env.NODE_ENV === 'production') {
-  main = '/'
+  main = ''
 }
 
 export default new Vuex.Store({
