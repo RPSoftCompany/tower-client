@@ -249,7 +249,10 @@
 <script>
   import newConfigurationRow from '../components/configuration/newConfigurationRow'
   import configurationRow from '../components/configuration/configurationRow'
-  import { mdiFormatLetterCaseLower, mdiFormatLetterCase, mdiPackageUp, mdiSquareEditOutline, mdiPencil, mdiChevronLeft, mdiChevronRight } from '@mdi/js'
+  import {
+    mdiFormatLetterCaseLower, mdiFormatLetterCase, mdiPackageUp,
+    mdiSquareEditOutline, mdiPencil, mdiChevronLeft, mdiChevronRight,
+  } from '@mdi/js'
 
   export default {
     name: 'Configuration',
@@ -261,6 +264,8 @@
       values: [],
       baseArray: [],
       arrayOfArrays: [],
+      defaultValues: {},
+      baseRules: [],
 
       promoted: [],
 
@@ -593,7 +598,18 @@
             }
           })
 
+          this.defaultValues = {}
+          this.baseRules = []
+
           this.values.forEach(base => {
+            base.defaultValues.forEach(defaultValue => {
+              this.defaultValues[defaultValue.name] = defaultValue.value
+            })
+
+            base.rules.forEach(baseRule => {
+              this.baseRules.push(baseRule)
+            })
+
             if (base.rules !== undefined) {
               base.rules.forEach(rule => {
                 const index = currentVariables.findIndex(variable => {
@@ -697,6 +713,16 @@
             type: data.type,
             versions: versions,
           }
+
+          const findDefault = this.defaultValues[data.name]
+          if (findDefault !== undefined) {
+            item.value = findDefault
+            item.forced_value = true
+          }
+
+          item.rules = this.baseRules.filter(baseRule => {
+            return baseRule.name === data.name
+          })
 
           this.configuration.items.push(item)
 
@@ -842,15 +868,15 @@
 
 <style scoped>
 .configurationTitle {
-	height: 50px;
-	color: lightgray;
-	margin-bottom: 20px;
-	margin-top: 20px;
-	cursor: default;
+  height: 50px;
+  color: lightgray;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  cursor: default;
 }
 
 .thirdWidth {
-	max-width: 32%;
-	width: 32%;
+  max-width: 32%;
+  width: 32%;
 }
 </style>
