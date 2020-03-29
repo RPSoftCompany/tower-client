@@ -232,7 +232,6 @@
         this.arrayOfArrays[sequenceNumber] = array.data
       },
       async fillNextArray (sequenceNumber) {
-        // this.configuration.items = [];
         this.configurationVersions = []
         this.configuration.version = null
         this.configuration.configInfo = 'Find your configuration'
@@ -338,15 +337,32 @@
       },
       removeArchiveColumn (column) {
         this.configuration.items.splice(column, 1)
+
+        if (this.configuration.items.length === 1) {
+          const configuration = this.configuration.items[0]
+
+          this.promote.promoted = configuration.promoted
+          this.promote.configuration = configuration
+          this.promote.show = true
+        }
       },
       async promoteConfiguration () {
         if (this.promote.promoted) {
           return
         }
 
+        const id = this.promote.configuration.data === undefined
+          ? this.promote.configuration.id : this.promote.configuration.data[0].id
+
         const configuration = await this.axios.post(
-          `${this.$store.state.mainUrl}/configurations/${this.promote.configuration.data[0].id}/promote`
+          `${this.$store.state.mainUrl}/configurations/${id}/promote`
         )
+
+        if (this.promote.configuration.data === undefined) {
+          this.promote.configuration.promoted = true
+        } else {
+          this.promote.configuration.data[0].promoted = true
+        }
 
         this.canPromote(configuration)
       },
@@ -356,10 +372,10 @@
 
 <style scoped>
 .configurationTitle {
-	height: 50px;
-	color: lightgray;
-	margin-bottom: 20px;
-	margin-top: 20px;
-	cursor: default;
+  height: 50px;
+  color: lightgray;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  cursor: default;
 }
 </style>
