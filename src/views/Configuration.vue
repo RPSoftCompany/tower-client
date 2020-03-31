@@ -314,12 +314,6 @@
         let isDifferent = false
         const maxVersion = this.configuration.maxVersion
 
-        if (this.configuration.versions[maxVersion] !== undefined) {
-          if (this.configuration.versions[maxVersion].length !== this.configuration.items.length) {
-            return true
-          }
-        }
-
         this.configuration.items.forEach(variable => {
           if (variable.type === 'boolean') {
             if (variable.value === true || variable.value === 'true') {
@@ -603,7 +597,10 @@
 
           this.values.forEach(base => {
             base.defaultValues.forEach(defaultValue => {
-              this.defaultValues[defaultValue.name] = defaultValue.value
+              this.defaultValues[defaultValue.name] = {
+                value: defaultValue.value,
+                cause: `Value forced by ${base.base}`,
+              }
             })
 
             base.rules.forEach(baseRule => {
@@ -716,8 +713,9 @@
 
           const findDefault = this.defaultValues[data.name]
           if (findDefault !== undefined) {
-            item.value = findDefault
+            item.value = findDefault.value
             item.forced_value = true
+            item.force_cause = findDefault.cause
           }
 
           item.rules = this.baseRules.filter(baseRule => {
