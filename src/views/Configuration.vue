@@ -78,12 +78,11 @@
           <template v-slot:activator="{ on }">
             <v-icon
               style="max-height: 36px;"
-              class="pr-3"
+              class="mr-3"
               @click="showPromotionDialog"
               v-on="on"
-            >
-              icons.mdiPackageUp
-            </v-icon>
+              v-text="icons.mdiPackageUp"
+            />
           </template>
           <span>Get promoted configuration</span>
         </v-tooltip>
@@ -671,9 +670,6 @@
             })
 
             this.slowlyAddItems(0)
-          } else {
-            configuration.data[0].variables =
-              promotedConfiguration.data[0].variables
           }
         }
 
@@ -693,7 +689,17 @@
           this.configuration.shownVersion = configuration.data[0].version
           this.configuration.versions = []
 
-          const currentVariables = configuration.data[0].variables
+          let currentVariables = configuration.data[0].variables
+          if (promotedConfiguration !== undefined) {
+            currentVariables = promotedConfiguration.data[0].variables
+            currentVariables.map(variable => {
+              variable.versions = []
+              configuration.data.forEach(data => {
+                variable.versions[data.version] = null
+              })
+            })
+          }
+
           configuration.data.forEach(conf => {
             conf.variables.forEach(variable => {
               const index = currentVariables.findIndex(el => {
@@ -775,6 +781,9 @@
               configuration.data[configuration.data.length - 1].version
             this.configuration.maxVersion = configuration.data[0].version
 
+            this.configuration.backupItems = currentVariables
+            this.configuration.editModeDisabled = true
+          } else {
             this.configuration.backupItems = currentVariables
             this.configuration.editModeDisabled = true
           }
