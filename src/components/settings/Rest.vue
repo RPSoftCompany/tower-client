@@ -218,7 +218,6 @@
       panel (actual) {
         for (let i = 0; i < this.items.length; i++) {
           const id = `divTextArea_${i}`
-          console.log(id)
           if (this.$refs[id] !== undefined) {
             if (this.$refs[id][0].className.includes('showDivTextArea')) {
               this.$refs[id][0].className = this.$refs[id][0].className.replace(' showDivTextArea', '')
@@ -482,14 +481,13 @@
   opacity: 0;
   position: absolute;
   width: 100%;
-  height: 100%;
+  line-height: 1.75rem;
   font-family: "Roboto", sans-serif;
   font-size: 16px;
   font-stretch: 100%;
-  line-height: 18px;
   padding-left: 12px;
   padding-top: 7px;
-  margin-top: 12px;
+  margin-top: 2px;
 
   font-variant-ligatures: inherit;
   font-variant-caps: inherit;

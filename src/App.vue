@@ -33,7 +33,7 @@
     <v-content>
       <v-container
         fluid
-        style="padding-left: 70px"
+        style="padding-left: 70px; height: 100%"
       >
         <transition
           name="fade"

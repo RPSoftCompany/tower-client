@@ -27,33 +27,35 @@
     >
       <div
         class="d-flex flex-row justify-space-around"
+        :class="{crossed: deleted, 'font-weight-light': deleted, 'font-italic': deleted}"
         :style="local_type === 'boolean' ? 'height:70px' : ''"
       >
         <div
           class="px-2 text-center history"
           label="name"
           :style="
-            versions.length > 0 ? 'min-width:33.33%' : 'min-width:50%'
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           v-text="local_name"
         />
         <div
-          v-if="versions.length > 0"
+          v-if="versions.length > 0 || deleted"
           :style="
-            versions.length > 0 ? 'min-width:33.33%' : 'min-width:50%'
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           class="px-2 text-center history"
+          :class="{ draft : draft, 'font-weight-light': draft, 'font-italic': draft}"
           v-text="
             local_type === 'password' && pass_locked
               ? '********'
-              : versions[current_version]
+              : deleted === true ? local_value : versions[current_version]
           "
         />
         <v-text-field
           v-if="local_type === 'string'"
           v-model="local_value"
           :style="
-            versions.length > 0 ? 'min-width:33.33%' : 'min-width:50%'
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           class="px-2"
           autocomplete="off"
@@ -68,7 +70,7 @@
           v-if="local_type === 'Vault'"
           v-model="local_value"
           :style="
-            versions.length > 0 ? 'min-width:33.33%' : 'min-width:50%'
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           class="px-2"
           autocomplete="off"
@@ -83,7 +85,7 @@
           v-if="local_type === 'text'"
           v-model="local_value"
           :style="
-            versions.length > 0 ? 'min-width:33.33%' : 'min-width:50%'
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           class="px-2"
           autocomplete="off"
@@ -99,7 +101,7 @@
           v-if="local_type === 'password'"
           v-model="local_value"
           :style="
-            versions.length > 0 ? 'min-width:33.33%' : 'min-width:50%'
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           class="px-2"
           autocomplete="off"
@@ -117,7 +119,7 @@
           v-if="local_type === 'boolean'"
           class="px-2"
           :style="
-            versions.length > 0
+            versions.length > 0 || deleted
               ? 'min-width:33.33%'
               : 'min-width:50%'
           "
@@ -139,7 +141,7 @@
           v-if="local_type === 'number'"
           v-model="local_value"
           :style="
-            versions.length > 0 ? 'min-width:33.33%' : 'min-width:50%'
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           class="px-2"
           autocomplete="off"
@@ -185,8 +187,13 @@
           return new Array()
         },
       },
+      deleted: {
+        type: Boolean,
+        default: false,
+      },
       current_version: {
         type: Number,
+        required: true,
       },
       forced_value: {
         type: Boolean,
@@ -198,6 +205,10 @@
       visible: {
         type: Boolean,
         default: true,
+      },
+      draft_versions: {
+        type: Array,
+        required: true,
       },
     },
     data: attrs => ({
@@ -216,6 +227,9 @@
       pass_locked: true,
     }),
     computed: {
+      draft () {
+        return this.draft_versions.includes(this.current_version)
+      },
       getClass () {
         const base = this.different ? 'different' : 'noColor'
 
@@ -225,6 +239,18 @@
         return `Version #${this.current_version}`
       },
       different () {
+        if (this.deleted) {
+          if (this.local_type !== 'boolean') {
+            return this.local_value
+          } else {
+            if (this.local_value === true) {
+              return 'true'
+            } else {
+              return 'false'
+            }
+          }
+        }
+
         if (this.local_type !== 'boolean') {
           return this.versions[this.current_version] !== this.local_value
         } else {
@@ -263,28 +289,37 @@
 
 <style scoped>
 .thirdWidth {
-	max-width: 32%;
+  max-width: 32%;
 }
 
 .halfWidth {
-	max-width: 50%;
+  max-width: 50%;
 }
 
 .different {
-	background: #f2a52a69;
-	transition: all 0.3s;
+  background: #f2a52a69;
+  transition: all 0.3s;
+}
+
+.draft {
+  background: rgba(64, 67, 78, 0.15);
+  transition: all 0.3s;
 }
 
 .noColor {
-	background: rgba(255, 255, 255, 0);
-	transition: all 0.3s;
+  background: rgba(255, 255, 255, 0);
+  transition: all 0.3s;
 }
 
 .invisible {
-	display: none;
+  display: none;
 }
 
 .history {
-	padding-top: 20px;
+  padding-top: 20px;
+}
+
+.crossed {
+  text-decoration: line-through;
 }
 </style>

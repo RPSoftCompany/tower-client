@@ -20,6 +20,7 @@
       <v-autocomplete
         v-for="base of baseArray"
         :key="base.name"
+        :ref="`baseConf_${base.name}`"
         v-model="values[base.sequenceNumber]"
         class="pa-2"
         :prepend-icon="base.icon"
@@ -29,7 +30,7 @@
         clearable
         autocomplete="off"
         return-object
-        @change="fillNextArray(base.sequenceNumber)"
+        @change="fillNextArray(base.sequenceNumber, `baseConf_${base.name}`)"
       />
     </div>
     <div
@@ -135,11 +136,22 @@
             >
               {{ icons.mdiChevronLeft }}
             </v-icon>
-            <div
-              :key="versionLabel"
-              class="subtitle-1 font-weight-bold"
-            >
-              {{ versionLabel }}
+            <div class="d-flex flex-row justify-space-around">
+              <div
+                :key="versionLabel"
+                class="subtitle-1 font-weight-bold"
+              >
+                {{ versionLabel }}
+              </div>
+              <v-btn
+                icon
+                color="primary"
+                small
+                :disabled="!differentThenCurrentVersion"
+                @click="goBackToVersion"
+              >
+                <v-icon>{{ icons.mdiDownload }}</v-icon>
+              </v-btn>
             </div>
             <v-icon
               :disabled="
@@ -193,26 +205,50 @@
           :value="item.value"
           :type="item.type"
           :versions="item.versions"
+          :deleted="item.deleted"
           :rules="item.rules"
           :forced_value="item.forced_value"
           :force_cause="item.force_cause"
           :visible="item.visible"
           :current_version="configuration.shownVersion"
+          :draft="item.draft"
+          :draft_versions="configuration.draftVersions"
           @change="changeConfigurationRow"
         />
       </template>
       <v-divider />
       <div
         v-if="!configuration.editMode"
-        class="d-flex flex-row justify-space-around mt-4 mb-2"
+        class="d-flex flex-row justify-space-around mt-2"
       >
-        <v-btn
-          :disabled="!differentThanPrevVersion"
-          color="primary"
-          @click="saveConfiguration"
+        <v-row
+          justify="start"
+          align="center"
+          class="mx-5"
         >
-          Save configuration
-        </v-btn>
+          <v-col
+            cols="4"
+            class="pa-0"
+          >
+            <v-checkbox
+              v-model="configuration.saveAsDraft"
+              dense
+              label="Save as draft"
+            />
+          </v-col>
+          <v-col
+            cols="4"
+            class="pa-0"
+            style="display: flex; justify-content: center"
+          >
+            <v-btn
+              :disabled="!differentThanPrevVersion"
+              color="primary"
+              @click="saveConfiguration"
+              v-text="configuration.saveAsDraft === true ? 'Save configuration as draft' : 'Save configuration'"
+            />
+          </v-col>
+        </v-row>
       </div>
     </v-card>
     <v-dialog
@@ -252,6 +288,7 @@
   import {
     mdiFormatLetterCaseLower, mdiFormatLetterCase, mdiPackageUp,
     mdiSquareEditOutline, mdiPencil, mdiChevronLeft, mdiChevronRight,
+    mdiDownload,
   } from '@mdi/js'
 
   export default {
@@ -288,9 +325,12 @@
         mdiPencil,
         mdiChevronLeft,
         mdiChevronRight,
+        mdiDownload,
       },
 
       configuration: {
+        saveAsDraft: false,
+        draftVersions: [],
         configInfo: 'Find your configuration',
         loading: false,
         new: false,
@@ -314,6 +354,12 @@
         let isDifferent = false
         const maxVersion = this.configuration.maxVersion
 
+        if (maxVersion !== undefined && maxVersion !== null && this.configuration.versions[maxVersion] !== undefined) {
+          if (this.configuration.versions[maxVersion].variablesCount !== this.configuration.items.length) {
+            return true
+          }
+        }
+
         this.configuration.items.forEach(variable => {
           if (variable.type === 'boolean') {
             if (variable.value === true || variable.value === 'true') {
@@ -334,6 +380,39 @@
 
         return isDifferent
       },
+      differentThenCurrentVersion () {
+        const currVersion = this.configuration.shownVersion
+
+        if (currVersion === 0) {
+          return false
+        }
+
+        if (this.configuration.versions[currVersion].variablesCount !== this.configuration.items.length) {
+          return true
+        }
+
+        let isDifferent = false
+
+        this.configuration.items.forEach(variable => {
+          if (variable.type === 'boolean') {
+            if (variable.value === true || variable.value === 'true') {
+              if (variable.versions[currVersion] !== 'true') {
+                isDifferent = true
+              }
+            } else if (variable.value === false || variable.value === 'false') {
+              if (variable.versions[currVersion] !== 'false') {
+                isDifferent = true
+              }
+            }
+          } else {
+            if (variable.value !== variable.versions[currVersion]) {
+              isDifferent = true
+            }
+          }
+        })
+
+        return isDifferent
+      },
       versionLabel () {
         if (this.configuration.versions.length === 0) {
           return null
@@ -346,7 +425,8 @@
             this.configuration.shownVersion !== this.configuration.maxVersion
               ? date
               : `latest (${date})`
-          return `Version #${this.configuration.shownVersion} - ${versionLabel}`
+          const draft = this.configuration.versions[this.configuration.shownVersion].draft === true ? '[ DRAFT ]' : ''
+          return `Version #${this.configuration.shownVersion} - ${versionLabel} ${draft}`
         }
       },
       editModeItems () {
@@ -394,20 +474,54 @@
         if (this.configuration.editMode) {
           return []
         } else {
+          let toAdd = []
+
+          if (this.configuration.versions[this.configuration.shownVersion] !== undefined) {
+            toAdd = this.configuration.versions[this.configuration.shownVersion].variables.filter(el => {
+              const element = this.configuration.items.find(existing => {
+                return existing.name === el.name
+              })
+              return element === undefined || el === null
+            })
+          }
+
           let filter = this.configuration.filter.filter
           if (filter === null || filter === undefined || filter === '') {
             filter = ''
             this.configuration.items.map(el => {
               el.visible = true
             })
-            return this.configuration.items
+
+            toAdd.map(el => {
+              el.visible = true
+              el.deleted = true
+              el.forced_value = true
+              el.versions = []
+            })
+
+            toAdd = [...this.configuration.items, ...toAdd]
+
+            toAdd.sort((a, b) => {
+              return a.name.toUpperCase().localeCompare(b.name.toUpperCase())
+            })
+
+            return toAdd
           }
 
           if (this.configuration.filter.caseSensitive) {
             filter = filter.toUpperCase()
           }
 
-          this.configuration.items.map(el => {
+          toAdd.map(el => {
+            el.visible = true
+            el.deleted = true
+            el.forced_value = true
+            el.versions = []
+          })
+
+          toAdd = [...this.configuration.items, ...toAdd]
+
+          toAdd.map(el => {
             const rightName = this.configuration.filter.caseSensitive
               ? el.name.toUpperCase()
               : el.name
@@ -428,7 +542,11 @@
               rightName.includes(filter) || rightValue.includes(filter)
           })
 
-          return this.configuration.items
+          toAdd.sort((a, b) => {
+            return a.name.toUpperCase().localeCompare(b.name.toUpperCase())
+          })
+
+          return toAdd
         }
       },
     },
@@ -459,7 +577,7 @@
 
         let restrictions = []
 
-        if (sequenceNumber > 0) {
+        if (sequenceNumber > 0 && this.values[sequenceNumber - 1] !== undefined) {
           restrictions = this.values[sequenceNumber - 1].restrictions
         }
 
@@ -469,7 +587,7 @@
 
         let newArray = array.data
 
-        if (sequenceNumber > 0) {
+        if (sequenceNumber > 0 && this.values[sequenceNumber - 1] !== undefined) {
           if (this.values[sequenceNumber - 1].options.hasRestrictions) {
             newArray = array.data.filter(item => {
               if (restrictions.includes(item.name)) {
@@ -482,10 +600,12 @@
 
         this.arrayOfArrays[sequenceNumber] = newArray
       },
-      async fillNextArray (sequenceNumber) {
+      async fillNextArray (sequenceNumber, eventTarget) {
         this.configuration.items = []
         this.configuration.editMode = false
         this.configuration.configInfo = 'Find your configuration'
+
+        this.$refs[eventTarget][0].blur()
 
         if (this.baseArray.length > sequenceNumber + 1) {
           const base = this.baseArray[sequenceNumber + 1].name
@@ -524,12 +644,15 @@
         this.configuration.items = []
         this.configuration.versions = []
         this.promoted = []
+        this.configuration.saveAsDraft = false
 
         this.configuration.loading = true
 
         const configuration = await this.axios.get(
           `${this.$store.state.mainUrl}/configurations?filter={"where":{${filter}},"order":"version DESC"}`
         )
+
+        this.configuration.draftVersions = []
 
         if (promotedConfiguration === undefined) {
           this.getPromoteCandidates()
@@ -586,9 +709,16 @@
               }
             })
 
+            if (conf.draft) {
+              this.configuration.draftVersions.push(conf.version)
+            }
+
             this.configuration.versions[conf.version] = {
               version: conf.version,
               effectiveDate: conf.effectiveDate,
+              draft: conf.draft,
+              variablesCount: conf.variables.length,
+              variables: conf.variables,
             }
           })
 
@@ -805,6 +935,7 @@
           variables: items,
           promoted: false,
           description: '',
+          draft: this.configuration.saveAsDraft,
         }
 
         this.values.forEach(value => {
@@ -858,6 +989,32 @@
           }
 
           this.configuration.shownVersion += plus
+        }
+      },
+      goBackToVersion () {
+        if (this.configuration.shownVersion !== 0) {
+          const newArray = [...this.configuration.versions[this.configuration.shownVersion].variables]
+          newArray.map(variable => {
+            variable.versions = []
+            delete variable.visible
+            delete variable.deleted
+            delete variable.forced_value
+            delete variable.force_cause
+
+            this.configuration.versions.forEach(version => {
+              const exists = version.variables.find(el => {
+                return el.name === variable.name
+              })
+
+              if (exists !== undefined && exists !== null) {
+                variable.versions[version.version] = exists.value
+              } else {
+                variable.versions[version.version] = null
+              }
+            })
+          })
+
+          this.configuration.items = [...newArray]
         }
       },
     },

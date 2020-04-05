@@ -16,7 +16,7 @@
 
 <template>
   <v-container
-    class="fill-height"
+    class="fill-height makeItEven"
     fluid
   >
     <v-row
@@ -225,37 +225,42 @@
 
 <style lang="scss" scoped>
 .towerImage {
-	margin-left: 4px;
+  margin-left: 4px;
+}
+
+.makeItEven {
+  margin-top: 0px !important;
+  margin-bottom: 30px !important;
 }
 
 .loginError {
-	color: red;
-	text-align: center;
-	margin-top: -20px;
+  color: red;
+  text-align: center;
+  margin-top: -20px;
 }
 
 .shake {
-	animation: shake 0.4s;
+  animation: shake 0.4s;
 }
 
 @keyframes shake {
-	0% {
-		transform: translate(1px, -1px) rotate(-1deg);
-	}
-	20% {
-		transform: translate(-1px, 1px) rotate(1deg);
-	}
-	40% {
-		transform: translate(1px, -1px) rotate(-1deg);
-	}
-	60% {
-		transform: translate(-1px, 1px) rotate(1deg);
-	}
-	80% {
-		transform: translate(1px, -1px) rotate(-1deg);
-	}
-	100% {
-		transform: translate(-1px, 1px) rotate(1deg);
-	}
+  0% {
+    transform: translate(1px, -1px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(-1px, 1px) rotate(1deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-1px, 1px) rotate(1deg);
+  }
+  80% {
+    transform: translate(1px, -1px) rotate(-1deg);
+  }
+  100% {
+    transform: translate(-1px, 1px) rotate(1deg);
+  }
 }
 </style>
