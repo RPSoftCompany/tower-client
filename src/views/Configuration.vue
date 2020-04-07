@@ -604,8 +604,6 @@
         this.configuration.editMode = false
         this.configuration.configInfo = 'Find your configuration'
 
-        this.$refs[eventTarget][0].blur()
-
         if (this.baseArray.length > sequenceNumber + 1) {
           const base = this.baseArray[sequenceNumber + 1].name
 
@@ -627,6 +625,7 @@
           }
 
           if (!undef) {
+            this.$refs[eventTarget][0].blur()
             this.getConfiguration()
           }
         }
@@ -764,13 +763,11 @@
                 })
 
                 if (index !== -1) {
-                  if (currentVariables[index].forced_value === undefined) {
-                    currentVariables[index].forced_value = true
-                    currentVariables[index].value = value.value
-                    currentVariables[
-                      index
-                    ].force_cause = `Value forced by ${base.base}`
-                  }
+                  currentVariables[index].forced_value = true
+                  currentVariables[index].value = value.value
+                  currentVariables[
+                    index
+                  ].force_cause = `Value forced by ${base.base}`
                 }
               })
             }

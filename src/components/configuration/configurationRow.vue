@@ -184,7 +184,7 @@
         type: Array,
         required: false,
         default: () => {
-          return new Array()
+          return []
         },
       },
       deleted: {
