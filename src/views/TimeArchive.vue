@@ -277,8 +277,6 @@
                 ref.blur()
               })
 
-              console.log('OK')
-
               this.values[this.values.length - 1] = null
               this.$forceUpdate()
             }
