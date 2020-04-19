@@ -48,6 +48,27 @@
     <v-divider v-if="baseModelLinks.length > 0" />
     <v-list dense>
       <v-list-item
+        v-for="obj of archives"
+        :key="obj.name"
+        link
+        :to="obj.path"
+        color="primary"
+        :class="{ maxWidth: mini, fullWidth: !mini }"
+      >
+        <v-list-item-icon class="maxWidth">
+          <v-icon
+            class="text-left"
+            style="min-width: 24px"
+          >
+            {{ obj.icon }}
+          </v-icon>
+          <span :class="{ 'v-list-item__title': true, 'hidden': mini, 'shown': !mini }">{{ obj.name }}</span>
+        </v-list-item-icon>
+      </v-list-item>
+    </v-list>
+    <v-divider v-if="baseModelLinks.length > 0" />
+    <v-list dense>
+      <v-list-item
         v-for="obj of baseModelLinks"
         :key="obj.name"
         link
@@ -93,7 +114,7 @@
 </template>
 
 <script>
-  import { mdiArchive, mdiSettings, mdiTune } from '@mdi/js'
+  import { mdiArchive, mdiSettings, mdiTune, mdiCalendarClock } from '@mdi/js'
 
   export default {
     name: 'Drawer',
@@ -101,16 +122,20 @@
       mini: true,
       mainLinks: [
         {
-          name: 'Archive',
-          path: '/archive',
-          icon: mdiArchive,
-        },
-        {
           name: 'Configuration',
           path: '/configuration',
           icon: mdiSettings,
         },
       ],
+      archives: [{
+        name: 'Version Archive',
+        path: '/archive',
+        icon: mdiArchive,
+      }, {
+        name: 'Time Archive',
+        path: '/timearchive',
+        icon: mdiCalendarClock,
+      }],
       baseModelLinks: [],
       configurationIcon: mdiTune,
     }),
@@ -185,7 +210,7 @@
         base.data.forEach(el => {
           if (
             (this.$store.state.userRoles.includes(`${el.name}.modify`) &&
-            this.$store.state.userRoles.includes(`${el.name}.view`)) ||
+              this.$store.state.userRoles.includes(`${el.name}.view`)) ||
             this.hasAdminPrivs()
           ) {
             links.push({
@@ -228,28 +253,28 @@
 
 <style>
 .icon:before {
-	font-family: sans-serif;
+  font-family: sans-serif;
 }
 
 .maxWidth {
-	width: 100%;
-	transition: all 0.3s ease-out;
+  width: 100%;
+  transition: all 0.3s ease-out;
 }
 
 .hidden {
-	margin-left: 0px;
-	opacity: 0;
-	width: 0%;
-	transition: all 0.3s ease-out;
+  margin-left: 0px;
+  opacity: 0;
+  width: 0%;
+  transition: all 0.3s ease-out;
 }
 
 .shown {
-	margin-left: 32px;
-	opacity: 1;
-	transition: all 0.4s ease-out;
+  margin-left: 32px;
+  opacity: 1;
+  transition: all 0.4s ease-out;
 }
 
 .transition {
-	transition: width 0.4s ease-out !important;
+  transition: width 0.4s ease-out !important;
 }
 </style>

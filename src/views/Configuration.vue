@@ -199,7 +199,7 @@
         <configurationRow
           v-for="item of configModelItems"
           ref="configRows"
-          :key="item.name"
+          :key="`${item.name}:${item.value}`"
           :name="item.name"
           :value="item.value"
           :type="item.type"
@@ -441,17 +441,17 @@
             return this.configuration.items
           }
 
-          if (this.configuration.filter.caseSensitive) {
+          if (!this.configuration.filter.caseSensitive) {
             filter = filter.toUpperCase()
           }
 
           this.configuration.items.map(el => {
-            const rightName = this.configuration.filter.caseSensitive
+            const rightName = !this.configuration.filter.caseSensitive
               ? el.name.toUpperCase()
               : el.name
             let rightValue = el.value
             if (rightValue !== null) {
-              rightValue = this.configuration.filter.caseSensitive
+              rightValue = !this.configuration.filter.caseSensitive
                 ? el.value.toUpperCase()
                 : el.value
             } else {
@@ -507,7 +507,7 @@
             return toAdd
           }
 
-          if (this.configuration.filter.caseSensitive) {
+          if (!this.configuration.filter.caseSensitive) {
             filter = filter.toUpperCase()
           }
 
@@ -521,12 +521,12 @@
           toAdd = [...this.configuration.items, ...toAdd]
 
           toAdd.map(el => {
-            const rightName = this.configuration.filter.caseSensitive
+            const rightName = !this.configuration.filter.caseSensitive
               ? el.name.toUpperCase()
               : el.name
             let rightValue = el.value
             if (rightValue !== null) {
-              rightValue = this.configuration.filter.caseSensitive
+              rightValue = !this.configuration.filter.caseSensitive
                 ? el.value.toUpperCase()
                 : el.value
             } else {
@@ -1016,6 +1016,13 @@
                 variable.versions[version.version] = exists.value
               } else {
                 variable.versions[version.version] = null
+              }
+
+              const findDefault = this.defaultValues[variable.name]
+              if (findDefault !== undefined) {
+                variable.value = findDefault.value
+                variable.forced_value = true
+                variable.force_cause = findDefault.cause
               }
             })
           })

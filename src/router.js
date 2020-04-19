@@ -6,8 +6,13 @@ Vue.use(Router)
 const router = new Router({
   routes: [
     {
+      path: '/timearchive',
+      name: 'Time Archive',
+      component: () => import('./views/TimeArchive.vue'),
+    },
+    {
       path: '/archive',
-      name: 'Archive',
+      name: 'Version Archive',
       component: () => import('./views/Archive.vue'),
     },
     {

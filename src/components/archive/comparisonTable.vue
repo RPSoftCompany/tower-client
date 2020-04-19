@@ -42,6 +42,21 @@
           </v-icon>
         </v-btn>
         <div
+          v-if="dateversion"
+          class="text-center"
+        >
+          <div
+            class="archiveTitle"
+            v-text="getVersionText(l)"
+          />
+          <div
+            class="dateLink"
+            @click="onHeaderClicked(l)"
+            v-text="getDateText(l)"
+          />
+        </div>
+        <div
+          v-else
           class="archiveTitle"
           v-text="getVersionText(l)"
         />
@@ -97,18 +112,22 @@
       configurations: {
         type: Array,
         default: () => {
-          return new Array()
+          return []
         },
       },
       bases: {
         type: Array,
         default: () => {
-          return new Array()
+          return []
         },
       },
       filter: {
         type: Object,
         required: true,
+      },
+      dateversion: {
+        type: Boolean,
+        default: false,
       },
     },
     data: () => ({
@@ -160,6 +179,14 @@
       },
     },
     methods: {
+      onHeaderClicked (configIndex) {
+        configIndex--
+        const config = this.configurations[configIndex]
+        this.$emit('headerClicked', {
+          index: configIndex,
+          dateTime: config.effectiveDate,
+        })
+      },
       onConfigurationsChange () {
         this.variables.clear()
         this.configurations.forEach(config => {
@@ -190,6 +217,12 @@
 
         return text
       },
+      getDateText (configIndex) {
+        configIndex--
+        const config = this.configurations[configIndex]
+
+        return new Date(config.effectiveDate).toLocaleString(undefined, { timeZoneName: 'short' })
+      },
       getVersionText (configIndex) {
         configIndex--
         const config = this.configurations[configIndex]
@@ -203,9 +236,16 @@
           }
         })
 
-        text += `#${config.version}`
+        if (!this.dateversion) {
+          text += `#${config.version}`
+        } else {
+          text = text.substring(0, text.length - 3)
+        }
 
         return text
+      },
+      forceUpdate () {
+        this.$forceUpdate()
       },
       removeColumn (archiveColumn) {
         archiveColumn--
@@ -242,20 +282,24 @@
 
 <style scoped>
 .archiveTitle {
-	margin-top: 10px;
-	padding-left: 24px;
+  margin-top: 10px;
+  padding-left: 24px;
 }
 
 .different {
-	background: #f2a52a69;
+  background: #f2a52a69;
 }
 
 .list-enter-active,
 .list-leave-active {
-	transition: all 0.4s;
+  transition: all 0.4s;
 }
 .list-enter, .list-leave-to /* .list-leave-active below version 2.1.8 */ {
-	opacity: 0;
-	transform: translateY(30px);
+  opacity: 0;
+  transform: translateY(30px);
+}
+.dateLink {
+  cursor: pointer;
+  text-decoration: underline;
 }
 </style>
