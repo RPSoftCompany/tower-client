@@ -480,7 +480,7 @@
               const element = this.configuration.items.find(existing => {
                 return existing.name === el.name
               })
-              return element === undefined || el === null
+              return element === undefined
             })
           }
 
@@ -882,26 +882,31 @@
         this.slowlyRemoveItems()
       },
       slowlyRemoveItems () {
-        if (this.configuration.items.length !== 0) {
-          this.configuration.items = []
-          this.configuration.editMode = !this.configuration.editMode
-          this.slowlyAddItems(0)
-        }
+        this.configuration.items = []
+        this.configuration.editMode = !this.configuration.editMode
+        this.slowlyAddItems(0)
+        // if (this.configuration.items.length !== 0) {
+        //   this.configuration.items = []
+        //   this.configuration.editMode = !this.configuration.editMode
+        //   this.slowlyAddItems(0)
+        // }
       },
       slowlyAddItems (i) {
-        setTimeout(() => {
-          const modif = 3
-          const slice = this.configuration.backupItems.slice(
-            i * modif,
-            (i + 1) * modif
-          )
-          if (slice.length === 0) {
-            this.configuration.editModeDisabled = false
-          } else {
-            this.configuration.items = this.configuration.items.concat(slice)
-            this.slowlyAddItems(++i)
-          }
-        }, 5)
+        this.configuration.items = [...this.configuration.backupItems]
+        this.configuration.editModeDisabled = false
+        // setTimeout(() => {
+        //   const modif = 3
+        //   const slice = this.configuration.backupItems.slice(
+        //     i * modif,
+        //     (i + 1) * modif
+        //   )
+        //   if (slice.length === 0) {
+        //     this.configuration.editModeDisabled = false
+        //   } else {
+        //     this.configuration.items = this.configuration.items.concat(slice)
+        //     this.slowlyAddItems(++i)
+        //   }
+        // }, 5)
       },
       changeConfigurationRow (data) {
         this.configuration.items.map(el => {
