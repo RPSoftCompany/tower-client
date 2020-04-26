@@ -80,21 +80,11 @@
                   class="d-flex"
                   cols="12"
                 >
-                  <div
+                  <editor-content
                     :ref="`divTextArea_${i}`"
-                    class="divTextArea"
-                    v-html="changeToHtml(item.template)"
-                  />
-                  <v-textarea
-                    :id="`RestTextArea_${i}`"
-                    :ref="`RestTextArea_${i}`"
-                    v-model="item.template"
-                    solo
-                    label="Template"
-                    auto-grow
-                    class="newTextArea"
-                    @blur="saveConfig(i)"
-                    @keydown="keyDown"
+                    :native-extensions="nativeExtensions"
+                    class="editor__content"
+                    :editor="createEditor(i)"
                   />
                 </v-col>
               </v-row>
@@ -135,14 +125,10 @@
             class="d-flex"
             cols="12"
           >
-            <v-textarea
-              id="RestTextArea_-1"
-              v-model="newItem.template"
-              solo
-              label="New template"
-              :rules="[rules.required]"
-              auto-grow
-              @keydown="keyDown"
+            <editor-content
+              :ref="`divTextArea_-1`"
+              class="editor__content"
+              :editor="createEditor(-1)"
             />
           </v-col>
         </v-row>
@@ -173,10 +159,17 @@
   import draggable from 'vuedraggable'
   import { mdiDotsVertical } from '@mdi/js'
 
+  import { Editor, EditorContent, Extension } from 'tiptap'
+  import {
+    CodeBlockHighlight,
+    History,
+  } from 'tiptap-extensions'
+
   export default {
     name: 'RestSettings',
     components: {
       draggable,
+      EditorContent,
     },
     data: props => ({
       panel: null,
@@ -200,6 +193,24 @@
       },
 
       newRowValid: true,
+
+      hljs: require('highlight.js/lib/highlight.js'),
+      tower: require('../highlight/tower_highlight.js'),
+      registred: false,
+
+      nativeExtensions: new class extends Extension {
+        keys () {
+          return {
+            Tab (state, dispatch, view) {
+              const transaction = state.tr.insertText('\t')
+              view.dispatch(transaction)
+              return true
+            },
+          }
+        }
+      }(),
+
+      editors: [],
     }),
     computed: {
       addDisabled () {
@@ -212,35 +223,6 @@
         }
 
         return false
-      },
-    },
-    watch: {
-      panel (actual) {
-        for (let i = 0; i < this.items.length; i++) {
-          const id = `divTextArea_${i}`
-          if (this.$refs[id] !== undefined) {
-            if (this.$refs[id][0].className.includes('showDivTextArea')) {
-              this.$refs[id][0].className = this.$refs[id][0].className.replace(' showDivTextArea', '')
-            }
-          }
-        }
-
-        if (actual !== undefined) {
-          this.$refs[`divTextArea_${actual}`][0].className += ' showDivTextArea'
-          const component = this.$refs[`RestTextArea_${actual}`][0]
-          component.$el.className += ' showDivTextArea'
-          const inputControl = component.$el.children[0]
-          const inputSlot = inputControl.children[0]
-          if (!inputSlot.style.cssText.includes('background-color')) {
-            inputSlot.style.cssText = 'background-color:rgba(0,0,0,0)'
-          }
-          const textFieldSlot = inputSlot.children[0]
-          const textArea = textFieldSlot.children[0]
-
-          if (!textArea.style.cssText.includes('background-color')) {
-            textArea.style.cssText += ';color: rgba(0,0,0,0)'
-          }
-        }
       },
     },
     async mounted () {
@@ -259,6 +241,62 @@
         )
 
         this.bases = responseBase.data
+      },
+      onFocus (i) {
+        if (!this.registred) {
+          this.hljs.registerLanguage('tower', this.tower)
+        }
+      },
+      createEditor (i) {
+        let editor = this.editors[i]
+        if (editor === undefined) {
+          if (i >= 0) {
+            editor = new Editor({
+              extensions: [
+                new History(),
+                new CodeBlockHighlight({
+                  languages: {
+                    tower: this.tower,
+                  },
+                }),
+                this.nativeExtensions,
+              ],
+              onUpdate: this.onUpdate,
+              onBlur: this.onBlur,
+              content: `<pre><code>${this.items[i].template}</code></pre>`,
+            })
+
+            this.editors[i] = editor
+          } else {
+            editor = new Editor({
+              extensions: [
+                new CodeBlockHighlight({
+                  languages: {
+                    tower: this.tower,
+                  },
+                }),
+              ],
+              onUpdate: (editor) => {
+                this.newItem.template = editor.getJSON().content[0].content === undefined
+                  ? '' : editor.getJSON().content[0].content[0].text
+              },
+              content: `<pre><code>${this.newItem.template}</code></pre>`,
+            })
+
+            this.editors[i] = editor
+          }
+        }
+        return editor
+      },
+      onBlur () {
+        this.saveConfig(this.panel)
+      },
+      onUpdate (editor) {
+        if (editor.getJSON().content[0].content !== undefined) {
+          this.items[this.panel].template = editor.getJSON().content[0].content[0].text
+        } else {
+          this.items[this.panel].template = ''
+        }
       },
       validateUrl (value) {
         if (value === '' || value === null) {
@@ -337,169 +375,91 @@
           changedItem
         )
       },
-      keyDown (event) {
-        const keyCode = event.keyCode || event.which
-
-        if (keyCode === 9) {
-          event.preventDefault()
-
-          const start = event.target.selectionStart
-
-          const item = /-*[0-9]+$/.exec(event.target.id)[0]
-
-          if (item === '-1') {
-            const text = this.newItem.template
-            const newText = text.substring(0, start) + '\t' + text.substring(start, text.length)
-
-            event.target.value = newText
-            event.target.selectionStart = start + 1
-            event.target.selectionEnd = start + 1
-            this.newItem.template = newText
-          } else {
-            const text = this.items[item].template
-            const newText = text.substring(0, start) + '\t' + text.substring(start, text.length)
-
-            event.target.value = newText
-            event.target.selectionStart = start + 1
-            event.target.selectionEnd = start + 1
-
-            this.items[item].template = newText
-          }
-        }
-      },
-      changeToHtml (text) {
-        text = text.replace(/</g, '&lt;')
-        text = text.replace(/>/g, '&gt;')
-
-        text = text.replace(/\r\n/g, '\n')
-
-        let splitText = text.split(/\s+/)
-        const splitSpaces = text.split(/\S+/)
-
-        let forEachPrev = false
-        let ifPrev = 0
-
-        splitText = splitText.map(el => {
-          if (forEachPrev) {
-            forEachPrev = false
-            if (el !== 'END') {
-              el = `<span class="textAfterForEach">${el}</span>`
-            }
-          }
-
-          if (/^[~<>=]+$/.test(el)) {
-            el = `<span class="textCompareSign">${el}</span>`
-          }
-
-          if (el === '%%ELSE%%') {
-            el = `<span class="textElse">${el}</span>`
-          }
-
-          if (ifPrev > 0) {
-            ifPrev++
-
-            if (ifPrev === 4) {
-              ifPrev = 0
-            }
-          }
-
-          if (el.includes('forEach')) {
-            el = el.replace(/forEach/g, '<span class="textForEach">forEach</span>')
-            forEachPrev = true
-          }
-
-          if (el.includes('%%if')) {
-            el = el.replace(/if/g, '<span class="textForEach">if</span>')
-            ifPrev = 1
-          }
-
-          if (/variables\[['"`]+\S+['"`]+\]/.test(el)) {
-            const withoutVariables = /\[['"`]+\S+['"`]+\]/.exec(el)[0]
-            el = el.replace(/\[['"`]+\S+['"`]+\]/, `<span class="textRegExp">${withoutVariables}</span>`)
-            el = el.replace(/^variables/, '<span class="textVariables">variables</span>')
-          }
-
-          if (el.includes('%%')) {
-            el = el.replace(/%%/g, '<span class="textPercent">%%</span>')
-          }
-
-          return el
-        })
-
-        let newText = ''
-
-        for (let i = 0; i < splitSpaces.length; i++) {
-          newText += splitSpaces[i]
-          if (splitText[i] !== undefined) {
-            newText += splitText[i]
-          }
-        }
-
-        return newText
-      },
     },
-
   }
 </script>
 
-<style lang="scss">
-.textPercent {
-  color: crimson;
-}
-.textForEach {
-  color: blue;
-}
-.textAfterForEach {
-  color: green;
-}
-.textVariables {
-  color: blueviolet;
-}
-.textRegExp {
-  color: brown;
-}
-.textCompareSign {
-  color: darkorange;
-}
-.textElse {
-  color: maroon;
-}
-</style>
-
 <style lang="scss" scoped>
-
 .handler {
   cursor: grab;
 }
+</style>
 
-.newTextArea{
-  color: rgba(0,0,0,0) !important;
-  background-color: rgba(0,0,0,0) !important;
-}
-
-.divTextArea {
-  opacity: 0;
-  position: absolute;
+<style lang="scss">
+.editor__content {
   width: 100%;
-  line-height: 1.75rem;
-  font-family: "Roboto", sans-serif;
-  font-size: 16px;
-  font-stretch: 100%;
-  padding-left: 12px;
-  padding-top: 7px;
-  margin-top: 2px;
-
-  font-variant-ligatures: inherit;
-  font-variant-caps: inherit;
-  font-variant-numeric: inherit;
-  font-variant-east-asian: inherit;
-  font-weight: inherit;
-
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+}
+.editor__content > div > pre > code {
+  padding-left: 5px;
+  background-color: #FFF;
+  font-size: 100%;
+  font-weight: 500;
+  width: 100%;
+  color: rgba(0,0,0,0.87)
 }
 
-.showDivTextArea {
-  opacity: 1 !important;
+.ProseMirror-focused {
+  border-radius: 0px !important;
+  outline: none;
+}
+
+code:before {
+  content: none !important;
+}
+
+pre:focus {
+    outline: 0px solid transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: #999999;
+}
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attribute,
+.hljs-tag,
+.hljs-name,
+.hljs-regexp,
+.hljs-link,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #f3696b;
+}
+.hljs-number,
+.hljs-meta,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-regexEqual,
+.hljs-params {
+  color: #f99157;
+}
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet {
+  color: #74c974;
+}
+.hljs-title,
+.hljs-section {
+  color: #fac356;
+}
+.hljs-forEach,
+.hljs-variables,
+.hljs-of,
+.hljs-if,
+.hljs-in,
+.hljs-end,
+.hljs-else,
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #5a94ce;
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
 }
 </style>

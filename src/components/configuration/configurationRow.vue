@@ -262,7 +262,14 @@
         }
       },
     },
-    watch: {},
+    watch: {
+      value () {
+        this.local_value =
+          this.type === 'boolean'
+            ? this.value === 'true'
+            : this.value
+      },
+    },
     mounted () {
       this.createLocalRules()
     },

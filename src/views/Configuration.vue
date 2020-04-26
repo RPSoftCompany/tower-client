@@ -199,7 +199,7 @@
         <configurationRow
           v-for="item of configModelItems"
           ref="configRows"
-          :key="`${item.name}:${item.value}`"
+          :key="item.name"
           :name="item.name"
           :value="item.value"
           :type="item.type"
