@@ -217,10 +217,7 @@
         mdiLockOpen,
       },
       local_name: attrs.name,
-      local_value:
-        attrs.type === 'boolean'
-          ? attrs.value === 'true'
-          : attrs.value,
+      local_value: attrs.getLocalValue(),
       local_type: attrs.type,
       local_rules: [],
 
@@ -264,16 +261,24 @@
     },
     watch: {
       value () {
-        this.local_value =
-          this.type === 'boolean'
-            ? this.value === 'true'
-            : this.value
+        this.local_value = this.getLocalValue()
       },
     },
     mounted () {
       this.createLocalRules()
     },
     methods: {
+      getLocalValue () {
+        if (this.type === 'boolean') {
+          if (this.value === 'true' || this.value === true) {
+            return true
+          } else {
+            return false
+          }
+        } else {
+          return this.value
+        }
+      },
       change () {
         this.$emit('change', {
           name: this.local_name,

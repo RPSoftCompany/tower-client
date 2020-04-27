@@ -166,6 +166,13 @@
         required: value => !!value || 'Required',
       },
     }),
+    watch: {
+      local_type (actual) {
+        if (actual === 'boolean') {
+          this.local_value = false
+        }
+      },
+    },
     methods: {
       focus () {
         this.$refs.configName.focus()
