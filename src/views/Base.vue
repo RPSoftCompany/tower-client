@@ -24,6 +24,7 @@
           :search-input.sync="modelText"
           :label="modelLabel"
           autocomplete="off"
+          :loading="loading"
           item-text="name"
           return-object
           :prepend-icon="baseIcon"
@@ -221,6 +222,8 @@
 
       currentTab: null,
 
+      loading: false,
+
       icons: {
         mdiPlus,
         mdiFormatLetterCase,
@@ -330,6 +333,7 @@
         }
       },
       async setData () {
+        this.loading = true
         const baseName = this.$route.params.name
 
         const modelData = await this.axios.get(
@@ -342,6 +346,8 @@
           `${this.$store.state.mainUrl}/baseConfigurations?filter={"where":{"name":"${baseName}"},"order":"name ASC"}`
         )
         this.base = base.data[0]
+
+        this.loading = false
       },
       async modelChanged (data) {
         if (data !== undefined) {

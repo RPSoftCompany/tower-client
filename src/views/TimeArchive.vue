@@ -144,7 +144,7 @@
         <v-progress-linear
           :active="loading"
           indeterminate
-          :height="10"
+          :height="3"
         />
         <v-divider class="pb-5" />
         <comparisonTable

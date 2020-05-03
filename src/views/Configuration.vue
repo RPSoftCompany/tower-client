@@ -26,6 +26,7 @@
         :prepend-icon="base.icon"
         :label="base.name"
         :items="arrayOfArrays[base.sequenceNumber]"
+        :loading="base.loading"
         item-text="name"
         clearable
         autocomplete="off"
@@ -41,7 +42,7 @@
     <v-progress-linear
       :active="configuration.loading"
       indeterminate
-      :height="10"
+      :height="3"
     />
     <v-card
       v-if="configuration.items.length > 0 || configuration.editMode === true"
@@ -570,6 +571,8 @@
     },
     methods: {
       async getArrayFromBase (base, sequenceNumber) {
+        this.baseArray[sequenceNumber].loading = true
+
         const array = await this.axios.get(
           `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`
         )
@@ -596,6 +599,8 @@
             })
           }
         }
+
+        this.baseArray[sequenceNumber].loading = false
 
         this.arrayOfArrays[sequenceNumber] = newArray
       },

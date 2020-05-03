@@ -80,6 +80,7 @@
       },
       role: {
         current: null,
+        prev: [],
         items: [],
       },
     }),
@@ -97,6 +98,7 @@
     },
     methods: {
       async resetData () {
+        this.role.prev = []
         this.group.current = null
         const response = await this.axios.get(
           `${this.$store.state.mainUrl}/Groups?filter={"order":"name ASC"}`
@@ -128,24 +130,40 @@
       },
       onGroupChange () {
         this.role.current = []
+        this.role.prev = []
         this.role.items.forEach(role => {
           if (this.group.current !== undefined) {
             if (this.group.current.roles.includes(role.name)) {
               this.role.current.push(role)
+              this.role.prev.push(role)
             }
           }
         })
       },
-      async onRoleChange () {
+      async onRoleChange (change) {
         this.group.current.roles = []
         this.role.current.forEach(role => {
           this.group.current.roles.push(role.name)
         })
 
-        await this.axios.patch(
-          `${this.$store.state.mainUrl}/Groups`,
-          this.group.current
-        )
+        const biggerArray = change.length > this.role.prev.length ? change : this.role.prev
+        const removeArray = change.length < this.role.prev.length ? change : this.role.prev
+
+        const diff = biggerArray.filter(el => {
+          return !removeArray.includes(el)
+        })
+
+        if (diff.length > 0) {
+          if (change.length > this.role.prev.length) {
+            await this.axios.post(`${this.$store.state.mainUrl}/groups/
+              ${this.group.current.id}/role?role=${diff[0].name}`)
+          } else {
+            await this.axios.delete(`${this.$store.state.mainUrl}/groups/
+              ${this.group.current.id}/role?role=${diff[0].name}`)
+          }
+        }
+
+        this.role.prev = change
       },
     },
   }

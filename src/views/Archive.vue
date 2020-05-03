@@ -52,6 +52,7 @@
         class="pa-2"
         :prepend-icon="base.icon"
         :label="base.name"
+        :loading="base.loading"
         :items="arrayOfArrays[base.sequenceNumber]"
         item-text="name"
         clearable
@@ -60,9 +61,11 @@
         @change="fillNextArray(base.sequenceNumber)"
       />
       <v-autocomplete
+        v-if="baseArray.length > 0"
         ref="versionCombo"
         v-model="configuration.version"
         :disabled="configuration.items.length > 3"
+        :loading="configuration.loadingVersions"
         class="pa-2"
         autocomplete="off"
         :items="configurationVersions"
@@ -77,6 +80,11 @@
     <div class="headline font-weight-light text-center configurationTitle">
       {{ configInfo }}
     </div>
+    <v-progress-linear
+      :active="configuration.loading"
+      indeterminate
+      :height="3"
+    />
     <transition
       name="slowfade"
       mode="out-in"
@@ -170,6 +178,8 @@
 
       configuration: {
         items: [],
+        loading: false,
+        loadingVersions: false,
         version: null,
         configInfo: 'Find your configuration',
         filter: {
@@ -188,9 +198,12 @@
       },
     },
     async created () {
+      this.configuration.loading = true
       const response = await this.axios.get(
         `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
       )
+
+      this.configuration.loading = false
 
       this.baseArray = response.data
       this.baseArray.forEach(el => {
@@ -221,6 +234,8 @@
         this.promote.show = true
       },
       async getArrayFromBase (base, sequenceNumber) {
+        this.baseArray[sequenceNumber].loading = true
+
         const array = await this.axios.get(
           `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`
         )
@@ -230,8 +245,12 @@
         })
 
         this.arrayOfArrays[sequenceNumber] = array.data
+
+        this.baseArray[sequenceNumber].loading = false
       },
       async fillNextArray (sequenceNumber) {
+        this.configuration.loadingVersions = true
+
         this.configurationVersions = []
         this.configuration.version = null
         this.configuration.configInfo = 'Find your configuration'
@@ -260,6 +279,8 @@
             this.getConfigurationVersions()
           }
         }
+
+        this.configuration.loadingVersions = false
       },
       async getConfigurationVersions () {
         let filter = ''
