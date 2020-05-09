@@ -100,13 +100,15 @@
         })
 
         rolesResponse.data.forEach(role => {
-          const base = role.name.split('.')[1]
-          const model = role.name.split('.')[2]
-          const item = modelsResponse.data.find(el => {
-            return el.name === model
-          })
+          if (role.name.split('.').length === 4) {
+            const base = role.name.split('.')[1]
+            const model = role.name.split('.')[2]
+            const item = modelsResponse.data.find(el => {
+              return el.name === model
+            })
 
-          this.permissions.models[base].selected.push(item)
+            this.permissions.models[base].selected.push(item)
+          }
         })
 
         this.bases = basesResponse.data

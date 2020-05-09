@@ -21,15 +21,16 @@
   >
     <v-text-field
       v-model="name"
-      label="Variable Name"
       :rules="[rules.required]"
+      :disabled="!isNew || !editable"
+      label="Variable Name"
       class="pl-5 pr-2"
-      :disabled="!isNew"
     />
     <v-text-field
       v-model="regex"
-      label="Regular expression"
+      :disabled="!editable"
       :rules="[rules.required]"
+      label="Regular expression"
       prefix="/"
       suffix="/"
       class="px-2"
@@ -37,10 +38,11 @@
     />
     <v-text-field
       v-model="errorMessage"
-      label="Error message"
-      class="pl-2 pr-5"
+      :disabled="!editable"
       :rules="[rules.required]"
       :append-outer-icon="isNew ? icons.mdiPlus : icons.mdiMinus"
+      label="Error message"
+      class="pl-2 pr-5"
       @click:append-outer="addRule"
       @change="modifyRule"
     />
@@ -57,6 +59,10 @@
         type: String,
         default: null,
         required: false,
+      },
+      editable: {
+        type: Boolean,
+        default: true,
       },
       rule_regex: {
         type: String,

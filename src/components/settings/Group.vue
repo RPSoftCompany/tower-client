@@ -24,14 +24,14 @@
         <v-autocomplete
           ref="groupSelect"
           v-model="group.current"
-          class="pa-2"
           :search-input.sync="group.text"
-          label="Group"
           :items="group.items"
+          :append-outer-icon="icons.mdiPlus"
+          class="pa-2"
+          label="Group"
           item-text="name"
           clearable
           autocomplete="off"
-          :append-outer-icon="icons.mdiPlus"
           return-object
           @click:append-outer="addGroup"
           @change="onGroupChange"
@@ -155,11 +155,11 @@
 
         if (diff.length > 0) {
           if (change.length > this.role.prev.length) {
-            await this.axios.post(`${this.$store.state.mainUrl}/groups/
-              ${this.group.current.id}/role?role=${diff[0].name}`)
+            await this.axios.post(`${this.$store.state.mainUrl}/groups/${
+            this.group.current.id}/role?role=${diff[0].name}`)
           } else {
-            await this.axios.delete(`${this.$store.state.mainUrl}/groups/
-              ${this.group.current.id}/role?role=${diff[0].name}`)
+            await this.axios.delete(`${this.$store.state.mainUrl}/groups/${
+            this.group.current.id}/role?role=${diff[0].name}`)
           }
         }
 
@@ -171,6 +171,6 @@
 
 <style lang="scss" scoped>
 .halfWidth {
-	width: 50%;
+  width: 50%;
 }
 </style>

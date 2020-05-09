@@ -22,11 +22,11 @@
         :key="base.name"
         :ref="`baseConf_${base.name}`"
         v-model="values[base.sequenceNumber]"
-        class="pa-2"
         :prepend-icon="base.icon"
         :label="base.name"
         :items="arrayOfArrays[base.sequenceNumber]"
         :loading="base.loading"
+        class="pa-2"
         item-text="name"
         clearable
         autocomplete="off"
@@ -41,8 +41,8 @@
     </div>
     <v-progress-linear
       :active="configuration.loading"
-      indeterminate
       :height="3"
+      indeterminate
     />
     <v-card
       v-if="configuration.items.length > 0 || configuration.editMode === true"
@@ -144,10 +144,10 @@
                 {{ versionLabel }}
               </div>
               <v-btn
+                :disabled="!differentThenCurrentVersion"
                 icon
                 color="primary"
                 small
-                :disabled="!differentThenCurrentVersion"
                 @click="goBackToVersion"
               >
                 <v-icon>{{ icons.mdiDownload }}</v-icon>
@@ -688,7 +688,7 @@
             'Configuration not found, you can create new one'
         } else {
           this.configuration.configInfo = `Create new configuration, version #${configuration
-            .data[0].version + 1}`
+          .data[0].version + 1}`
 
           this.configuration.shownVersion = configuration.data[0].version
           this.configuration.versions = []

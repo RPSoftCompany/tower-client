@@ -23,14 +23,14 @@
           v-model="currentModel"
           :search-input.sync="modelText"
           :label="modelLabel"
-          autocomplete="off"
           :loading="loading"
-          item-text="name"
-          return-object
           :prepend-icon="baseIcon"
           :items="models"
-          clearable
           :append-outer-icon="icons.mdiPlus"
+          autocomplete="off"
+          item-text="name"
+          return-object
+          clearable
           @change="modelChanged"
           @click:append-outer="addModel"
         >
@@ -73,12 +73,12 @@
                     ? 'Filter (case sensitive)'
                     : 'Filter (case insensitive)'
                 "
-                outlined
                 :append-icon="
                   rules.caseSensitive
                     ? icons.mdiFormatLetterCaseLower
                     : icons.mdiFormatLetterCase
                 "
+                outlined
                 clearable
                 dense
                 class="px-4"
@@ -98,11 +98,16 @@
                   :rule_regex="rule.value"
                   :rule_error="rule.error"
                   :rule_id="rule._id"
+                  :editable="isEditable"
                   @delete_rule="deleteRule"
                   @modify_rule="modifyRule"
                 />
               </transition-group>
-              <v-rule @add_rule="addRule" />
+              <v-rule
+                ref="newRule"
+                :editable="isEditable"
+                @add_rule="addRule"
+              />
             </v-card>
           </v-tab-item>
           <v-tab-item>
@@ -114,12 +119,12 @@
                     ? 'Filter (case sensitive)'
                     : 'Filter (case insensitive)'
                 "
-                outlined
                 :append-icon="
                   variables.caseSensitive
                     ? icons.mdiFormatLetterCaseLower
                     : icons.mdiFormatLetterCase
                 "
+                outlined
                 clearable
                 dense
                 class="px-4"
@@ -138,19 +143,25 @@
                   :id="variable._id"
                   :key="variable._id"
                   :name="variable.name"
+                  :editable="isEditable"
                   :is-new="false"
                   :value="variable.value"
                   @remove_variable="removeVariable"
                   @modify_variable="modifyVariable"
                 />
               </transition-group>
-              <v-variable @add_variable="addVariable" />
+              <v-variable
+                ref="newVariable"
+                :editable="isEditable"
+                @add_variable="addVariable"
+              />
             </v-card>
           </v-tab-item>
           <v-tab-item>
             <v-card flat>
               <v-checkbox
                 v-model="restrictions.hasRestrictions"
+                :disabled="!isEditable"
                 color="primary"
                 label="Allow restrictions"
                 class="px-4"
@@ -165,12 +176,12 @@
                       ? 'Filter (case sensitive)'
                       : 'Filter (case insensitive)'
                   "
-                  outlined
                   :append-icon="
                     restrictions.caseSensitive
                       ? icons.mdiFormatLetterCaseLower
                       : icons.mdiFormatLetterCase
                   "
+                  outlined
                   clearable
                   dense
                   class="px-4 pt-4"
@@ -183,6 +194,7 @@
                   v-model="restrictions.table.selected"
                   :headers="restrictions.table.headers"
                   :items="restrictions.table.items"
+                  :disabled="!isEditable"
                   :hide-default-footer="true"
                   :single-select="false"
                   :search="restrictions.filter"
@@ -266,7 +278,8 @@
       },
       noDataText () {
         if (this.base !== null && this.modelText !== null) {
-          return `No results matching <strong>${this.modelText}</strong>. Press <kbd>+</kbd> button on the right to create a new ${this.base.name}`
+          return `No results matching <strong>${
+          this.modelText}</strong>. Press <kbd>+</kbd> button on the right to create a new ${this.base.name}`
         } else {
           return 'Type name and press <kbd>+</kbd> button to create new model'
         }
@@ -295,6 +308,23 @@
           }
         })
       },
+      isEditable () {
+        let editable = false
+
+        const prefix = `configurationModel.${this.base.name}.${this.currentModel.name}`
+
+        if (this.$store.state.userRoles.includes('configurationModel.modify')) {
+          if (this.$store.state.userRoles.includes(`${prefix}.modify`)) {
+            editable = true
+          } else if (!this.$store.state.userRoles.includes(`${prefix}.view`)) {
+            if (this.$store.state.userRoles.includes(`baseConfigurations.${this.base.name}.modify`)) {
+              editable = true
+            }
+          }
+        }
+
+        return editable
+      },
       rulesList () {
         if (
           this.rules.filter === undefined ||
@@ -302,16 +332,17 @@
           this.rules.filter === ''
         ) {
           return this.rules.items
+        } else {
+          return this.rules.items.filter(el => {
+            if (this.rules.caseSensitive) {
+              return el.name.includes(this.rules.filter)
+            } else {
+              return el.name
+                .toUpperCase()
+                .includes(this.rules.filter.toUpperCase())
+            }
+          })
         }
-        return this.rules.items.filter(el => {
-          if (this.rules.caseSensitive) {
-            return el.name.includes(this.rules.filter)
-          } else {
-            return el.name
-              .toUpperCase()
-              .includes(this.rules.filter.toUpperCase())
-          }
-        })
       },
     },
     mounted () {
@@ -351,6 +382,14 @@
       },
       async modelChanged (data) {
         if (data !== undefined) {
+          if (this.$refs.newVariable !== undefined) {
+            this.$refs.newVariable.reset()
+          }
+
+          if (this.$refs.newRule !== undefined) {
+            this.$refs.newRule.reset()
+          }
+
           const modelData = await this.axios.get(
             `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"id":"${data.id}"}}`
           )
@@ -373,7 +412,7 @@
             `${
               this.$store.state.mainUrl
             }/baseConfigurations?filter={"where":{"sequenceNumber":"${this.base
-              .sequenceNumber + 1}"}}`
+            .sequenceNumber + 1}"}}`
           )
 
           if (childBase.data.length > 0) {
@@ -529,11 +568,13 @@
       async modifyRestriction (data) {
         if (data.value === true) {
           await this.axios.post(
-            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/restriction?restriction=${data.item.name}`
+            `${this.$store.state.mainUrl}/configurationModels/${
+            this.currentModel.id}/restriction?restriction=${data.item.name}`
           )
         } else {
           await this.axios.delete(
-            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/restriction?restriction=${data.item.name}`
+            `${this.$store.state.mainUrl}/configurationModels/${
+            this.currentModel.id}/restriction?restriction=${data.item.name}`
           )
         }
       },
@@ -552,6 +593,6 @@
 
 <style scoped>
 .halfWidth {
-	width: 50%;
+  width: 50%;
 }
 </style>

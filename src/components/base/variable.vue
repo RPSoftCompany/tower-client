@@ -21,16 +21,16 @@
   >
     <v-text-field
       v-model="in_name"
+      :rules="currentRules"
+      :disabled="!isNew || !editable"
       label="Variable Name"
-      :rules="[rules.required]"
       class="pl-5 pr-2"
-      :disabled="!isNew"
     />
     <v-text-field
       v-model="in_value"
-      label="Value"
-      :rules="[rules.required]"
+      :disabled="!editable"
       :append-outer-icon="in_isNew ? icons.mdiPlus : icons.mdiMinus"
+      label="Value"
       class="pl-2 pr-5"
       @click:append-outer="addVariable"
       @change="modifyVariable"
@@ -48,6 +48,10 @@
         type: String,
         default: null,
         required: false,
+      },
+      editable: {
+        type: Boolean,
+        default: true,
       },
       value: {
         type: String,
@@ -76,6 +80,8 @@
         in_isNew: attrs.isNew,
         in_id: attrs.id,
 
+        currentRules: [],
+
         rules: {
           required: value => !!value || 'Required',
         },
@@ -83,19 +89,37 @@
     },
     methods: {
       addVariable () {
-        if (this.in_isNew) {
+        this.currentRules = [this.rules.required]
+
+        this.$nextTick(() => {
           if (this.$refs.variableValidationForm.validate()) {
-            this.$emit('add_variable', {
-              name: this.in_name,
-              value: this.in_value,
-              _this: this,
-            })
+            if (this.in_isNew) {
+              this.$emit('add_variable', {
+                name: this.in_name,
+                value: this.in_value,
+                _this: this,
+              })
+            } else {
+              this.$emit('remove_variable', {
+                id: this.in_id,
+              })
+            }
           }
-        } else {
-          this.$emit('remove_variable', {
-            id: this.in_id,
-          })
-        }
+        })
+
+        // if (this.in_isNew) {
+        //   if (this.$refs.variableValidationForm.validate()) {
+        //     this.$emit('add_variable', {
+        //       name: this.in_name,
+        //       value: this.in_value,
+        //       _this: this,
+        //     })
+        //   }
+        // } else {
+        //   this.$emit('remove_variable', {
+        //     id: this.in_id,
+        //   })
+        // }
       },
       modifyVariable () {
         if (!this.in_isNew) {

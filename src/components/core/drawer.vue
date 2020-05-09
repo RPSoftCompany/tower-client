@@ -16,23 +16,23 @@
 
 <template>
   <v-navigation-drawer
+    :mini-variant.sync="mini"
     absolute
     permanent
     clipped
     expand-on-hover
     class="elevation-5 transition"
     mini-variant-width="55"
-    :mini-variant.sync="mini"
     style="padding-top:48px; position: fixed"
   >
     <v-list dense>
       <v-list-item
         v-for="obj of mainLinksPerm"
         :key="obj.name"
-        link
         :to="obj.path"
-        color="primary"
         :class="{ maxWidth: mini, fullWidth: !mini }"
+        link
+        color="primary"
       >
         <v-list-item-icon class="maxWidth">
           <v-icon
@@ -48,12 +48,12 @@
     <v-divider v-if="baseModelLinks.length > 0" />
     <v-list dense>
       <v-list-item
-        v-for="obj of archives"
+        v-for="obj of archiveLinks"
         :key="obj.name"
-        link
         :to="obj.path"
-        color="primary"
         :class="{ maxWidth: mini, fullWidth: !mini }"
+        link
+        color="primary"
       >
         <v-list-item-icon class="maxWidth">
           <v-icon
@@ -71,10 +71,10 @@
       <v-list-item
         v-for="obj of baseModelLinks"
         :key="obj.name"
-        link
         :to="obj.path"
-        color="primary"
         :class="{ maxWidth: mini }"
+        link
+        color="primary"
       >
         <v-list-item-icon class="maxWidth">
           <v-icon
@@ -94,10 +94,10 @@
     >
       <v-list-item
         key="Settings"
+        :class="{ maxWidth: mini }"
         link
         to="/settings"
         color="primary"
-        :class="{ maxWidth: mini }"
       >
         <v-list-item-icon class="maxWidth">
           <v-icon
@@ -159,15 +159,28 @@
 
         const links = []
 
-        if (roles.includes('configuration.view')) {
+        if (roles.includes('configuration.modify')) {
           links.push(this.mainLinks[0])
         }
 
-        if (roles.includes('configuration.modify')) {
-          links.push(this.mainLinks[1])
+        return links
+      },
+      archiveLinks () {
+        let roles = this.$store.state.userRoles
+
+        if (this.isAdmin) {
+          return this.archives
         }
 
-        return links
+        if (roles === null) {
+          roles = []
+        }
+
+        if (roles.includes('configuration.view')) {
+          return this.archives
+        }
+
+        return []
       },
     },
     watch: {
@@ -209,8 +222,8 @@
 
         base.data.forEach(el => {
           if (
-            (this.$store.state.userRoles.includes(`${el.name}.modify`) &&
-              this.$store.state.userRoles.includes(`${el.name}.view`)) ||
+            (this.$store.state.userRoles.includes(`baseConfigurations.${el.name}.modify`) &&
+            this.$store.state.userRoles.includes(`baseConfigurations.${el.name}.view`)) ||
             this.hasAdminPrivs()
           ) {
             links.push({
