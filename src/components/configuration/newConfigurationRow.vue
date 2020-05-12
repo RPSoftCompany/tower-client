@@ -22,33 +22,32 @@
     <v-form
       v-show="visible"
       ref="newConfigForm"
-      lazy-validation
       autocomplete="off"
     >
       <div class="d-flex flex-row justify-space-around">
         <v-text-field
           ref="configName"
           v-model="local_name"
-          class="pr-3 pl-4 thirdWidth"
-          autocomplete="off"
-          label="name"
           :rules="[rules.required]"
           :disabled="local_added"
           :error-messages="errorMessage"
+          class="pr-3 pl-4 newConfigRow_thirdWidth"
+          autocomplete="off"
+          label="name"
           @input="removeErrorMessage"
         />
         <v-select
           v-model="local_type"
-          label="Type"
           :items="local_types"
-          class="thirdWidth"
+          label="Type"
+          class="newConfigRow_thirdWidth"
           autocomplete="off"
           @input="changed"
         />
         <v-text-field
           v-if="local_type === 'string'"
           v-model="local_value"
-          class="px-2 thirdWidth"
+          class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           label="value"
           @input="changed"
@@ -56,7 +55,7 @@
         <v-text-field
           v-if="local_type === 'Vault'"
           v-model="local_value"
-          class="px-2 thirdWidth"
+          class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           label="value"
           @input="changed"
@@ -64,7 +63,7 @@
         <v-textarea
           v-if="local_type === 'text'"
           v-model="local_value"
-          class="px-2 thirdWidth"
+          class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           rows="1"
           label="value"
@@ -73,17 +72,17 @@
         <v-text-field
           v-if="local_type === 'password'"
           v-model="local_value"
-          class="px-2 thirdWidth"
-          autocomplete="off"
-          label="value"
           :type="pass_locked ? 'password' : 'text'"
           :append-icon="pass_locked ? icons.mdiLock : icons.mdiLockOpen"
+          class="px-2 newConfigRow_thirdWidth"
+          autocomplete="off"
+          label="value"
           @input="changed"
           @click:append="pass_locked = !pass_locked"
         />
         <div
           v-if="local_type === 'boolean'"
-          class="thirdWidth"
+          class="newConfigRow_thirdWidth"
           style="min-width:32%; max-height: 30px"
         >
           <v-checkbox
@@ -105,7 +104,7 @@
           @input="changed"
         />
         <v-icon
-          class="addRemoveIcon mr-3 mt-3 pb-0"
+          class="newConfigRow_addRemoveIcon mr-3 mt-3 pb-0"
 
           @click="iconClicked"
           v-text="local_added ? icons.mdiMinus : icons.mdiPlus"
@@ -215,18 +214,3 @@
     },
   }
 </script>
-
-<style scoped>
-.addRemoveIcon {
-padding-bottom: 10px;
-width: 2%;
-}
-
-.thirdWidth {
-max-width: 32%;
-}
-
-.invisible {
-display: none;
-}
-</style>

@@ -22,20 +22,20 @@
     <v-form
       v-show="visible"
       ref="newConfigForm"
-      autocomplete="off"
       :class="getClass"
+      autocomplete="off"
     >
       <div
-        class="d-flex flex-row justify-space-around"
-        :class="{crossed: deleted, 'font-weight-light': deleted, 'font-italic': deleted}"
+        :class="{configRow_crossed: deleted, 'font-weight-light': deleted, 'font-italic': deleted}"
         :style="local_type === 'boolean' ? 'height:70px' : ''"
+        class="d-flex flex-row justify-space-around"
       >
         <div
-          class="px-2 text-center history"
-          label="name"
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
+          class="px-2 text-center configRow_history"
+          label="name"
           v-text="local_name"
         />
         <div
@@ -43,8 +43,8 @@
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
-          class="px-2 text-center history"
-          :class="{ draft : draft, 'font-weight-light': draft, 'font-italic': draft}"
+          :class="{ configRow_draft : draft, 'font-weight-light': draft, 'font-italic': draft}"
+          class="px-2 text-center configRow_history"
           v-text="
             local_type === 'password' && pass_locked
               ? '********'
@@ -57,12 +57,12 @@
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
-          class="px-2"
-          autocomplete="off"
-          label="value"
           :rules="local_rules"
           :disabled="forced_value"
           :hint="force_cause"
+          class="px-2"
+          autocomplete="off"
+          label="value"
           persistent-hint
           @input="change"
         />
@@ -72,12 +72,12 @@
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
-          class="px-2"
-          autocomplete="off"
-          label="value"
           :rules="local_rules"
           :disabled="forced_value"
           :hint="force_cause"
+          class="px-2"
+          autocomplete="off"
+          label="value"
           persistent-hint
           @input="change"
         />
@@ -87,13 +87,13 @@
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
+          :rules="local_rules"
+          :disabled="forced_value"
+          :hint="force_cause"
           class="px-2"
           autocomplete="off"
           rows="1"
           label="value"
-          :rules="local_rules"
-          :disabled="forced_value"
-          :hint="force_cause"
           persistent-hint
           @input="change"
         />
@@ -103,36 +103,36 @@
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
-          class="px-2"
-          autocomplete="off"
-          label="value"
           :type="pass_locked ? 'password' : 'text'"
           :append-icon="pass_locked ? icons.mdiLock : icons.mdiLockOpen"
           :rules="local_rules"
           :disabled="forced_value"
           :hint="force_cause"
+          class="px-2"
+          autocomplete="off"
+          label="value"
           persistent-hint
           @input="change"
           @click:append="pass_locked = !pass_locked"
         />
         <div
           v-if="local_type === 'boolean'"
-          class="px-2"
           :style="
             versions.length > 0 || deleted
               ? 'min-width:33.33%'
               : 'min-width:50%'
           "
+          class="px-2"
         >
           <v-checkbox
             v-model="local_value"
+            :rules="local_rules"
+            :disabled="forced_value"
+            :hint="force_cause"
             color="lightblack"
             class="align-center justify-center"
             style="margin-top: 20px; width: 100%"
             ripple
-            :rules="local_rules"
-            :disabled="forced_value"
-            :hint="force_cause"
             persistent-hint
             @change="change"
           />
@@ -143,13 +143,13 @@
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
+          :rules="local_rules"
+          :disabled="forced_value"
+          :hint="force_cause"
           class="px-2"
           autocomplete="off"
           label="value"
           type="number"
-          :rules="local_rules"
-          :disabled="forced_value"
-          :hint="force_cause"
           persistent-hint
           @input="change"
         />
@@ -171,6 +171,7 @@
       versions: {
         type: Array,
         required: false,
+        default: function () { return [] },
       },
       value: {
         type: [String, Boolean],
@@ -228,7 +229,7 @@
         return this.draft_versions.includes(this.current_version)
       },
       getClass () {
-        const base = this.different ? 'different' : 'noColor'
+        const base = this.different ? 'configRow_different' : 'configRow_noColor'
 
         return base
       },
@@ -298,40 +299,3 @@
     },
   }
 </script>
-
-<style scoped>
-.thirdWidth {
-  max-width: 32%;
-}
-
-.halfWidth {
-  max-width: 50%;
-}
-
-.different {
-  background: #f2a52a69;
-  transition: all 0.3s;
-}
-
-.draft {
-  background: rgba(64, 67, 78, 0.15);
-  transition: all 0.3s;
-}
-
-.noColor {
-  background: rgba(255, 255, 255, 0);
-  transition: all 0.3s;
-}
-
-.invisible {
-  display: none;
-}
-
-.history {
-  padding-top: 20px;
-}
-
-.crossed {
-  text-decoration: line-through;
-}
-</style>

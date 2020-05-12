@@ -25,6 +25,7 @@
       :disabled="!isNew || !editable"
       label="Variable Name"
       class="pl-5 pr-2"
+      @blur="onBlur"
     />
     <v-text-field
       v-model="in_value"
@@ -106,20 +107,6 @@
             }
           }
         })
-
-        // if (this.in_isNew) {
-        //   if (this.$refs.variableValidationForm.validate()) {
-        //     this.$emit('add_variable', {
-        //       name: this.in_name,
-        //       value: this.in_value,
-        //       _this: this,
-        //     })
-        //   }
-        // } else {
-        //   this.$emit('remove_variable', {
-        //     id: this.in_id,
-        //   })
-        // }
       },
       modifyVariable () {
         if (!this.in_isNew) {
@@ -130,6 +117,11 @@
               value: this.in_value,
             })
           }
+        }
+      },
+      onBlur () {
+        if (this.in_isNew) {
+          this.currentRules = []
         }
       },
       reset () {

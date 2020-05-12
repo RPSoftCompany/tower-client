@@ -14,16 +14,16 @@ Vue.prototype.axios = axios
 Vue.prototype.$eventHub = new Vue()
 
 axios.interceptors.request.use(config => {
-    if (store.state.user !== null) {
-        config.headers.Authorization = store.state.user.id
-    }
+  if (store.state.user !== null) {
+    config.headers.Authorization = store.state.user.id
+  }
 
-    return config
+  return config
 })
 
 new Vue({
-    router,
-    store,
-    vuetify,
-    render: h => h(App),
+  router,
+  store,
+  vuetify,
+  render: h => h(App),
 }).$mount('#app')

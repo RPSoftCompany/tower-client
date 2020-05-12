@@ -21,30 +21,33 @@
   >
     <v-text-field
       v-model="name"
-      :rules="[rules.required]"
+      :rules="currentRules"
       :disabled="!isNew || !editable"
       label="Variable Name"
       class="pl-5 pr-2"
+      @blur="onBlur"
     />
     <v-text-field
       v-model="regex"
       :disabled="!editable"
-      :rules="[rules.required]"
+      :rules="currentRules"
       label="Regular expression"
       prefix="/"
       suffix="/"
       class="px-2"
       @change="modifyRule"
+      @blur="onBlur"
     />
     <v-text-field
       v-model="errorMessage"
       :disabled="!editable"
-      :rules="[rules.required]"
+      :rules="currentRules"
       :append-outer-icon="isNew ? icons.mdiPlus : icons.mdiMinus"
       label="Error message"
       class="pl-2 pr-5"
       @click:append-outer="addRule"
       @change="modifyRule"
+      @blur="onBlur"
     />
   </v-form>
 </template>
@@ -97,6 +100,8 @@
         isNew: attrs.new_rule,
         id: attrs.rule_id,
 
+        currentRules: [],
+
         rules: {
           required: value => !!value || 'Required',
         },
@@ -105,14 +110,17 @@
     methods: {
       addRule () {
         if (this.isNew) {
-          if (this.$refs.ruleValidationForm.validate()) {
-            this.$emit('add_rule', {
-              name: this.name,
-              regex: this.regex,
-              errorMessage: this.errorMessage,
-              _this: this,
-            })
-          }
+          this.currentRules = [this.rules.required]
+          this.$nextTick(() => {
+            if (this.$refs.ruleValidationForm.validate()) {
+              this.$emit('add_rule', {
+                name: this.name,
+                regex: this.regex,
+                errorMessage: this.errorMessage,
+                _this: this,
+              })
+            }
+          })
         } else {
           this.$emit('delete_rule', {
             id: this.id,
@@ -121,14 +129,22 @@
       },
       modifyRule () {
         if (!this.isNew) {
-          if (this.$refs.ruleValidationForm.validate()) {
-            this.$emit('modify_rule', {
-              id: this.id,
-              name: this.name,
-              regex: this.regex,
-              errorMessage: this.errorMessage,
-            })
-          }
+          this.currentRules = [this.rules.required]
+          this.$nextTick(() => {
+            if (this.$refs.ruleValidationForm.validate()) {
+              this.$emit('modify_rule', {
+                id: this.id,
+                name: this.name,
+                regex: this.regex,
+                errorMessage: this.errorMessage,
+              })
+            }
+          })
+        }
+      },
+      onBlur () {
+        if (this.isNew) {
+          this.currentRules = []
         }
       },
       reset () {

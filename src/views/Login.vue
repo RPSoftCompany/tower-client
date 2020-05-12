@@ -30,8 +30,8 @@
       >
         <v-card :class="cardClass">
           <v-img
-            src="/tower.png"
             :width="384"
+            src="/tower.png"
             class="towerImage"
           />
           <v-card-text>
@@ -41,24 +41,24 @@
             >
               <v-text-field
                 v-model="login"
+                :prepend-icon="icons.mdiAccount"
+                :rules="rules.login"
+                :disabled="loginInputsDisabled"
                 autofocus
                 label="User"
                 name="login"
-                :prepend-icon="icons.mdiAccount"
                 type="text"
-                :rules="rules.login"
-                :disabled="loginInputsDisabled"
                 required
                 @keyup.enter="submit"
               />
               <v-text-field
                 v-model="pass"
-                label="Password"
-                name="password"
                 :prepend-icon="icons.mdiLock"
-                type="password"
                 :rules="rules.pass"
                 :disabled="loginInputsDisabled"
+                label="Password"
+                name="password"
+                type="password"
                 required
                 @keyup.enter="submit"
               />
@@ -71,10 +71,10 @@
           />
           <v-card-actions>
             <v-btn
-              color="primary"
-              block
               :loading="loading"
               :disabled="!form.valid"
+              color="primary"
+              block
               @click="submit"
             >
               Login

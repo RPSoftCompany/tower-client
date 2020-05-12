@@ -179,42 +179,52 @@
         </div>
       </template>
       <div class="py-3" />
-      <template v-if="configuration.editMode">
-        <newConfigurationRow
-          v-for="item of editModeItems"
-          :key="item.name"
-          :name="item.name"
-          :value="item.value"
-          :type="item.type"
-          :added="true"
-          :visible="item.visible"
-          @change_row="changeConfigurationRow"
-          @remove_row="removeNewConfigurationRow"
-        />
+      <div
+        v-if="configuration.editMode"
+      >
+        <vueCustomScrollbar
+          class="newConfigParent"
+        >
+          <newConfigurationRow
+            v-for="item of editModeItems"
+            :key="item.name"
+            :name="item.name"
+            :value="item.value"
+            :type="item.type"
+            :added="true"
+            :visible="item.visible"
+            @change_row="changeConfigurationRow"
+            @remove_row="removeNewConfigurationRow"
+          />
+        </vueCustomScrollbar>
         <newConfigurationRow
           ref="newConigurationRow"
           @add_row="addNewConfigurationRow"
         />
-      </template>
+      </div>
       <template v-else>
-        <configurationRow
-          v-for="item of configModelItems"
-          ref="configRows"
-          :key="item.name"
-          :name="item.name"
-          :value="item.value"
-          :type="item.type"
-          :versions="item.versions"
-          :deleted="item.deleted"
-          :rules="item.rules"
-          :forced_value="item.forced_value"
-          :force_cause="item.force_cause"
-          :visible="item.visible"
-          :current_version="configuration.shownVersion"
-          :draft="item.draft"
-          :draft_versions="configuration.draftVersions"
-          @change="changeConfigurationRow"
-        />
+        <vueCustomScrollbar
+          class="configParent pr-2"
+        >
+          <configurationRow
+            v-for="item of configModelItems"
+            ref="configRows"
+            :key="item.name"
+            :name="item.name"
+            :value="item.value"
+            :type="item.type"
+            :versions="item.versions"
+            :deleted="item.deleted"
+            :rules="item.rules"
+            :forced_value="item.forced_value"
+            :force_cause="item.force_cause"
+            :visible="item.visible"
+            :current_version="configuration.shownVersion"
+            :draft="item.draft"
+            :draft_versions="configuration.draftVersions"
+            @change="changeConfigurationRow"
+          />
+        </vueCustomScrollbar>
       </template>
       <v-divider />
       <div
@@ -285,6 +295,7 @@
 <script>
   import newConfigurationRow from '../components/configuration/newConfigurationRow'
   import configurationRow from '../components/configuration/configurationRow'
+  import vueCustomScrollbar from 'vue-custom-scrollbar'
   import {
     mdiFormatLetterCaseLower, mdiFormatLetterCase, mdiPackageUp,
     mdiSquareEditOutline, mdiPencil, mdiChevronLeft, mdiChevronRight,
@@ -296,6 +307,7 @@
     components: {
       newConfigurationRow,
       configurationRow,
+      vueCustomScrollbar,
     },
     data: () => ({
       values: [],
@@ -354,6 +366,10 @@
         let isDifferent = false
         const maxVersion = this.configuration.maxVersion
 
+        if (this.configuration.items.length !== this.configuration.backupItems.length) {
+          return false
+        }
+
         if (maxVersion !== undefined && maxVersion !== null && this.configuration.versions[maxVersion] !== undefined) {
           if (this.configuration.versions[maxVersion].variablesCount !== this.configuration.items.length) {
             return true
@@ -382,6 +398,10 @@
       },
       differentThenCurrentVersion () {
         const currVersion = this.configuration.shownVersion
+
+        if (this.configuration.items.length !== this.configuration.backupItems.length) {
+          return false
+        }
 
         if (currVersion === 0) {
           return false
@@ -476,14 +496,15 @@
         } else {
           let toAdd = []
 
-          if (this.configuration.versions[this.configuration.shownVersion] !== undefined) {
-            toAdd = this.configuration.versions[this.configuration.shownVersion].variables.filter(el => {
-              const element = this.configuration.items.find(existing => {
-                return existing.name === el.name
+          if (this.configuration.versions[this.configuration.shownVersion] !== undefined &&
+            this.configuration.backupItems.length === this.configuration.items.length) {
+              toAdd = this.configuration.versions[this.configuration.shownVersion].variables.filter(el => {
+                const element = this.configuration.items.find(existing => {
+                  return existing.name === el.name
+                })
+                return element === undefined
               })
-              return element === undefined
-            })
-          }
+            }
 
           let filter = this.configuration.filter.filter
           if (filter === null || filter === undefined || filter === '') {
@@ -887,31 +908,31 @@
         this.slowlyRemoveItems()
       },
       slowlyRemoveItems () {
-        this.configuration.items = []
-        this.configuration.editMode = !this.configuration.editMode
-        this.slowlyAddItems(0)
-        // if (this.configuration.items.length !== 0) {
-        //   this.configuration.items = []
-        //   this.configuration.editMode = !this.configuration.editMode
-        //   this.slowlyAddItems(0)
-        // }
+        // this.configuration.items = []
+        // this.configuration.editMode = !this.configuration.editMode
+        // this.slowlyAddItems(0)
+        if (this.configuration.items.length !== 0) {
+          this.configuration.items = []
+          this.configuration.editMode = !this.configuration.editMode
+          this.slowlyAddItems(0)
+        }
       },
       slowlyAddItems (i) {
-        this.configuration.items = [...this.configuration.backupItems]
-        this.configuration.editModeDisabled = false
-        // setTimeout(() => {
-        //   const modif = 3
-        //   const slice = this.configuration.backupItems.slice(
-        //     i * modif,
-        //     (i + 1) * modif
-        //   )
-        //   if (slice.length === 0) {
-        //     this.configuration.editModeDisabled = false
-        //   } else {
-        //     this.configuration.items = this.configuration.items.concat(slice)
-        //     this.slowlyAddItems(++i)
-        //   }
-        // }, 5)
+        // this.configuration.items = [...this.configuration.backupItems]
+        // this.configuration.editModeDisabled = false
+        setTimeout(() => {
+          const modif = 5
+          const slice = this.configuration.backupItems.slice(
+            i * modif,
+            (i + 1) * modif
+          )
+          if (slice.length === 0) {
+            this.configuration.editModeDisabled = false
+          } else {
+            this.configuration.items = this.configuration.items.concat(slice)
+            this.slowlyAddItems(++i)
+          }
+        }, 5)
       },
       changeConfigurationRow (data) {
         this.configuration.items.map(el => {
@@ -1056,5 +1077,26 @@
 .thirdWidth {
   max-width: 32%;
   width: 32%;
+}
+
+.newConfigParent {
+  max-height: calc(100vh - 530px);
+  overflow-y: auto;
+}
+
+.configParent {
+  max-height: calc(100vh - 530px);
+  overflow-y: auto;
+}
+</style>
+
+<style lang="scss">
+.newConfigRow_addRemoveIcon {
+  padding-bottom: 10px;
+  width: 2%;
+}
+
+.newConfigRow_thirdWidth {
+  max-width: 32%;
 }
 </style>

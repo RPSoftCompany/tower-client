@@ -26,7 +26,7 @@
           :loading="loading"
           :prepend-icon="baseIcon"
           :items="models"
-          :append-outer-icon="icons.mdiPlus"
+          :append-outer-icon="canAddBase ? icons.mdiPlus : undefined"
           autocomplete="off"
           item-text="name"
           return-object
@@ -325,6 +325,9 @@
 
         return editable
       },
+      canAddBase () {
+        return this.$store.state.userRoles.includes('configurationModel.modify')
+      },
       rulesList () {
         if (
           this.rules.filter === undefined ||
@@ -426,8 +429,10 @@
               this.restrictions.table.items = children.data
               this.restrictions.table.selected = []
               this.restrictions.table.items.forEach(el => {
-                if (this.currentModel.restrictions.includes(el.name)) {
-                  this.restrictions.table.selected.push(el)
+                if (this.currentModel.restrictions !== undefined) {
+                  if (this.currentModel.restrictions.includes(el.name)) {
+                    this.restrictions.table.selected.push(el)
+                  }
                 }
               })
             }
