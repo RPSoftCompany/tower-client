@@ -130,7 +130,7 @@
       getUserStartPath (roles) {
         let path = null
 
-        if (this.$store.state.user.username === 'admin') {
+        if (this.$store.state.user.username === 'admin' || roles.includes('admin')) {
           return 'settings'
         }
 
@@ -147,19 +147,14 @@
           }
         }
 
-        const models = []
+        // const models = []
 
         if (path === null) {
           for (const perm of roles) {
-            if (perm.indexOf('.') >= 0) {
+            if (perm.startsWith('baseConfigurations')) {
               const split = perm.split('.')
-              if (split.length === 2) {
-                const model = split[0]
-                if (path !== null && models.includes(model)) {
-                  path = model
-                } else {
-                  models.push(model)
-                }
+              if (split.length === 3) {
+                path = `base/${split[1]}`
               }
             }
           }

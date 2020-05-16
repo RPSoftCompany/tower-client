@@ -25,7 +25,10 @@
     mini-variant-width="55"
     style="padding-top:48px; position: fixed"
   >
-    <v-list dense>
+    <v-list
+      v-if="mainLinksPerm.length > 0"
+      dense
+    >
       <v-list-item
         v-for="obj of mainLinksPerm"
         :key="obj.name"
@@ -45,7 +48,7 @@
         </v-list-item-icon>
       </v-list-item>
     </v-list>
-    <v-divider v-if="baseModelLinks.length > 0" />
+    <v-divider v-if="mainLinksPerm.length > 0" />
     <v-list dense>
       <v-list-item
         v-for="obj of archiveLinks"

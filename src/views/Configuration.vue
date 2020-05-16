@@ -1099,4 +1099,27 @@
 .newConfigRow_thirdWidth {
   max-width: 32%;
 }
+
+.configRow_different {
+  background: #f2a52a69;
+  transition: all 0.3s;
+}
+
+.configRow_draft {
+  background: rgba(64, 67, 78, 0.15);
+  transition: all 0.3s;
+}
+
+.configRow_noColor {
+  background: rgba(255, 255, 255, 0);
+  transition: all 0.3s;
+}
+
+.configRow_history {
+  padding-top: 20px;
+}
+
+.configRow_crossed {
+  text-decoration: line-through;
+}
 </style>

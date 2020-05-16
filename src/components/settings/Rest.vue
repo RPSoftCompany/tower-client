@@ -24,9 +24,9 @@
       accordion
     >
       <draggable
-        style="width: 100%"
         :list="items"
         :options="{ handle: '.handler' }"
+        style="width: 100%"
         @end="dragEnded"
       >
         <v-expansion-panel
@@ -83,8 +83,8 @@
                   <editor-content
                     :ref="`divTextArea_${i}`"
                     :native-extensions="nativeExtensions"
-                    class="editor__content"
                     :editor="createEditor(i)"
+                    class="editor__content"
                   />
                 </v-col>
               </v-row>
@@ -102,52 +102,15 @@
         <v-row align="center">
           <v-col
             class="d-flex"
-            cols="6"
+            cols="12"
           >
             <v-text-field
               v-model="newItem.url"
               :rules="[rules.validateUrl]"
+              :append-icon="icons.mdiPlus"
               label="New URL"
+              @click:append="addConfiguration"
             />
-          </v-col>
-          <v-col
-            class="d-flex"
-            cols="3"
-            offset="3"
-          >
-            <v-select
-              v-model="newItem.returnType"
-              :items="types"
-              label="New type"
-            />
-          </v-col>
-          <v-col
-            class="d-flex"
-            cols="12"
-          >
-            <editor-content
-              :ref="`divTextArea_-1`"
-              class="editor__content"
-              :editor="createEditor(-1)"
-            />
-          </v-col>
-        </v-row>
-        <v-row
-          align="center"
-          justify="end"
-        >
-          <v-col
-            md="auto"
-            class="d-flex"
-            cols="12"
-          >
-            <v-btn
-              class="primary"
-              :disabled="addDisabled"
-              @click="addConfiguration"
-            >
-              Add Configuration
-            </v-btn>
           </v-col>
         </v-row>
       </v-form>
@@ -157,7 +120,7 @@
 
 <script>
   import draggable from 'vuedraggable'
-  import { mdiDotsVertical } from '@mdi/js'
+  import { mdiDotsVertical, mdiPlus } from '@mdi/js'
 
   import { Editor, EditorContent, Extension } from 'tiptap'
   import {
@@ -180,12 +143,11 @@
 
       icons: {
         mdiDotsVertical,
+        mdiPlus,
       },
 
       newItem: {
         url: null,
-        returnType: 'json',
-        template: '',
       },
       rules: {
         validateUrl: props.validateUrl,
@@ -333,8 +295,8 @@
 
         const newConfig = {
           url: this.newItem.url,
-          template: this.newItem.template,
-          returnType: this.newItem.returnType,
+          template: '{\n%%forEach var in variables%%\n\t"%%var.name%%":"%%var.value%%"\n%%forEach END%%\n}',
+          returnType: 'json',
         }
 
         await this.axios.post(
