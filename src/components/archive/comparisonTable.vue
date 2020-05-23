@@ -18,16 +18,16 @@
   <div v-if="configurationsLength > 0">
     <div class="d-flex flex-row justify-space-around pb-5">
       <div
-        class="caption font-weight-bold text-center archiveTitle"
         :style="maxWidth"
+        class="subtitle-1 font-weight-bold text-center archiveTitle"
       >
         Variable Name
       </div>
       <div
         v-for="l in configurationsLength"
         :key="l"
-        class="caption font-weight-bold text-center"
         :style="maxWidth"
+        class="caption font-weight-bold text-center"
       >
         <v-btn
           icon
@@ -46,7 +46,7 @@
           class="text-center"
         >
           <div
-            class="archiveTitle"
+            class="archiveTitle pl-7"
             v-text="getVersionText(l)"
           />
           <div
@@ -57,7 +57,7 @@
         </div>
         <div
           v-else
-          class="archiveTitle"
+          class="archiveTitle pl-9"
           v-text="getVersionText(l)"
         />
         <div
@@ -68,6 +68,7 @@
     </div>
     <v-divider />
     <transition-group
+      :class="innerclass === null ? '' : innerclass"
       name="fade"
       tag="div"
     >
@@ -128,6 +129,11 @@
       dateversion: {
         type: Boolean,
         default: false,
+      },
+      innerclass: {
+        type: String,
+        required: false,
+        default: null,
       },
     },
     data: () => ({
@@ -283,7 +289,6 @@
 <style scoped>
 .archiveTitle {
   margin-top: 10px;
-  padding-left: 24px;
 }
 
 .different {

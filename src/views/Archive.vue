@@ -49,11 +49,11 @@
         :key="base.name"
         v-model="values[base.sequenceNumber]"
         :disabled="configuration.items.length > 3"
-        class="pa-2"
         :prepend-icon="base.icon"
         :label="base.name"
         :loading="base.loading"
         :items="arrayOfArrays[base.sequenceNumber]"
+        class="pa-2"
         item-text="name"
         clearable
         autocomplete="off"
@@ -66,10 +66,10 @@
         v-model="configuration.version"
         :disabled="configuration.items.length > 3"
         :loading="configuration.loadingVersions"
-        class="pa-2"
-        autocomplete="off"
         :items="configurationVersions"
         :prepend-icon="icons.mdiNumeric"
+        class="pa-2"
+        autocomplete="off"
         label="version"
         item-text="full"
         clearable
@@ -82,8 +82,8 @@
     </div>
     <v-progress-linear
       :active="configuration.loading"
-      indeterminate
       :height="3"
+      indeterminate
     />
     <transition
       name="slowfade"
@@ -137,6 +137,7 @@
           :configurations="configuration.items"
           :bases="baseArray"
           :filter="configuration.filter"
+          innerclass="configParent"
           @removeArchiveColumn="removeArchiveColumn"
         />
       </v-card>
@@ -276,7 +277,7 @@
           }
 
           if (!undef) {
-            this.getConfigurationVersions()
+            await this.getConfigurationVersions()
           }
         }
 
@@ -398,5 +399,12 @@
   margin-bottom: 20px;
   margin-top: 20px;
   cursor: default;
+}
+</style>
+
+<style>
+.configParent {
+  max-height: calc(100vh - 480px);
+  overflow-y: auto;
 }
 </style>

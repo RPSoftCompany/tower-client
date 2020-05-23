@@ -68,10 +68,10 @@
         />
         <v-time-picker
           v-model="time"
+          :format="timeFormat"
           color="primary"
           use-seconds
           scrollable
-          :format="timeFormat"
           class="mx-5 mb-2"
         />
         <v-divider />
@@ -95,10 +95,10 @@
         :key="base.name"
         v-model="values[base.sequenceNumber]"
         :disabled="configuration.items.length > 3"
-        class="pa-2"
         :prepend-icon="base.icon"
         :label="base.name"
         :items="arrayOfArrays[base.sequenceNumber]"
+        class="pa-2"
         item-text="name"
         clearable
         autocomplete="off"
@@ -143,8 +143,8 @@
         </div>
         <v-progress-linear
           :active="loading"
-          indeterminate
           :height="3"
+          indeterminate
         />
         <v-divider class="pb-5" />
         <comparisonTable
@@ -153,6 +153,7 @@
           :bases="baseArray"
           :dateversion="true"
           :filter="configuration.filter"
+          innerclass="configParent"
           @removeArchiveColumn="removeArchiveColumn"
           @headerClicked="dateHeaderClicked"
         />
@@ -373,5 +374,10 @@
 <style lang="scss">
 .v-time-picker-clock__item {
   cursor: pointer;
+}
+
+.configParent {
+  max-height: calc(100vh - 500px);
+  overflow-y: auto;
 }
 </style>

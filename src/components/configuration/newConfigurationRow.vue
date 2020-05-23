@@ -82,14 +82,14 @@
         />
         <div
           v-if="local_type === 'boolean'"
-          class="newConfigRow_thirdWidth"
+          class="newConfigRow_thirdWidth pl-2"
           style="min-width:32%; max-height: 30px"
         >
           <v-checkbox
             v-model="local_value"
             color="lightblack"
             class="align-center justify-center"
-            style="margin-top: 10px"
+            style="margin-top: 10px; width: 100%"
             ripple
             @change="changed"
           />
@@ -97,7 +97,7 @@
         <v-text-field
           v-if="local_type === 'number'"
           v-model="local_value"
-          class="px-2 thirdWidth"
+          class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           label="value"
           type="number"

@@ -317,9 +317,7 @@
           if (this.$store.state.userRoles.includes(`${prefix}.modify`)) {
             editable = true
           } else if (!this.$store.state.userRoles.includes(`${prefix}.view`)) {
-            if (this.$store.state.userRoles.includes(`baseConfigurations.${this.base.name}.modify`)) {
-              editable = true
-            }
+            editable = true
           }
         }
 
@@ -348,7 +346,12 @@
         }
       },
     },
-    mounted () {
+    async mounted () {
+      const roles = await this.axios.get(
+        `${this.$store.state.mainUrl}/members/getUserRoles`
+      )
+
+      this.$store.commit('setUserRoles', roles.data)
       this.setData()
     },
     methods: {

@@ -44,10 +44,10 @@
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           :class="{ configRow_draft : draft, 'font-weight-light': draft, 'font-italic': draft}"
-          class="px-2 text-center configRow_history"
+          class="px-2 text-center configRow_history configRow_pre"
           v-text="
             local_type === 'password' && pass_locked
-              ? '********'
+              ? '••••••••'
               : deleted === true ? local_value : versions[current_version]
           "
         />
@@ -58,9 +58,9 @@
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           :rules="local_rules"
-          :disabled="forced_value"
+          :readonly="forced_value"
           :hint="force_cause"
-          class="px-2"
+          class="px-2 configRow_field"
           autocomplete="off"
           label="value"
           persistent-hint
@@ -73,9 +73,9 @@
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           :rules="local_rules"
-          :disabled="forced_value"
+          :readonly="forced_value"
           :hint="force_cause"
-          class="px-2"
+          class="px-2 configRow_field"
           autocomplete="off"
           label="value"
           persistent-hint
@@ -88,9 +88,9 @@
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           :rules="local_rules"
-          :disabled="forced_value"
+          :readonly="forced_value"
           :hint="force_cause"
-          class="px-2"
+          class="px-2 configRow_field"
           autocomplete="off"
           rows="1"
           label="value"
@@ -106,9 +106,9 @@
           :type="pass_locked ? 'password' : 'text'"
           :append-icon="pass_locked ? icons.mdiLock : icons.mdiLockOpen"
           :rules="local_rules"
-          :disabled="forced_value"
+          :readonly="forced_value"
           :hint="force_cause"
-          class="px-2"
+          class="px-2 configRow_field"
           autocomplete="off"
           label="value"
           persistent-hint
@@ -122,12 +122,12 @@
               ? 'min-width:33.33%'
               : 'min-width:50%'
           "
-          class="px-2"
+          class="px-2 configRow_field"
         >
           <v-checkbox
             v-model="local_value"
             :rules="local_rules"
-            :disabled="forced_value"
+            :readonly="forced_value"
             :hint="force_cause"
             color="lightblack"
             class="align-center justify-center"
@@ -144,9 +144,9 @@
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
           :rules="local_rules"
-          :disabled="forced_value"
+          :readonly="forced_value"
           :hint="force_cause"
-          class="px-2"
+          class="px-2 configRow_field"
           autocomplete="off"
           label="value"
           type="number"

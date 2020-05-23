@@ -147,8 +147,6 @@
           }
         }
 
-        // const models = []
-
         if (path === null) {
           for (const perm of roles) {
             if (perm.startsWith('baseConfigurations')) {

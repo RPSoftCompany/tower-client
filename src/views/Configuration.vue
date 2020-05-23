@@ -144,6 +144,7 @@
                 {{ versionLabel }}
               </div>
               <v-btn
+                v-if="configuration.versions.length > 2"
                 :disabled="!differentThenCurrentVersion"
                 icon
                 color="primary"
@@ -374,6 +375,10 @@
           if (this.configuration.versions[maxVersion].variablesCount !== this.configuration.items.length) {
             return true
           }
+
+          if (this.configuration.versions[maxVersion].draft === true && this.configuration.saveAsDraft === false) {
+            return true
+          }
         }
 
         this.configuration.items.forEach(variable => {
@@ -589,6 +594,12 @@
       if (this.baseArray.length === 0) {
         this.configuration.configInfo = 'You need to setup your Base Models first'
       }
+
+      const roles = await this.axios.get(
+        `${this.$store.state.mainUrl}/members/getUserRoles`
+      )
+
+      this.$store.commit('setUserRoles', roles.data)
     },
     methods: {
       async getArrayFromBase (base, sequenceNumber) {
@@ -908,9 +919,6 @@
         this.slowlyRemoveItems()
       },
       slowlyRemoveItems () {
-        // this.configuration.items = []
-        // this.configuration.editMode = !this.configuration.editMode
-        // this.slowlyAddItems(0)
         if (this.configuration.items.length !== 0) {
           this.configuration.items = []
           this.configuration.editMode = !this.configuration.editMode
@@ -918,8 +926,6 @@
         }
       },
       slowlyAddItems (i) {
-        // this.configuration.items = [...this.configuration.backupItems]
-        // this.configuration.editModeDisabled = false
         setTimeout(() => {
           const modif = 5
           const slice = this.configuration.backupItems.slice(
@@ -928,6 +934,11 @@
           )
           if (slice.length === 0) {
             this.configuration.editModeDisabled = false
+            if (!this.configuration.editMode) {
+              for (const row of this.$refs.configRows) {
+                row.valid()
+              }
+            }
           } else {
             this.configuration.items = this.configuration.items.concat(slice)
             this.slowlyAddItems(++i)
@@ -944,7 +955,7 @@
       },
       async saveConfiguration () {
         for (const row of this.$refs.configRows) {
-          if (!row.valid()) {
+          if (!row.deleted && !row.valid()) {
             this.$store.commit(
               'setError',
               'Your configuration is invalid. Please review and correct it.'
@@ -1116,10 +1127,23 @@
 }
 
 .configRow_history {
-  padding-top: 20px;
+  padding-top: 22px;
+  border-bottom: solid;
+  border-width: 1px;
+  border-color: rgba(0,0,0,0.05);
+}
+
+.configRow_field {
+  border-bottom: solid;
+  border-width: 1px;
+  border-color: rgba(0,0,0,0.05);
 }
 
 .configRow_crossed {
   text-decoration: line-through;
+}
+
+.configRow_pre {
+  white-space: pre;
 }
 </style>
