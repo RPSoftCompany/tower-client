@@ -225,7 +225,7 @@
 
         base.data.forEach(el => {
           if (
-            (this.$store.state.userRoles.includes(`baseConfigurations.${el.name}.view`)) ||
+            (this.$store.state.userRoles.includes('configurationModel.view')) ||
             this.hasAdminPrivs()
           ) {
             links.push({

@@ -225,6 +225,10 @@
           return
         }
 
+        if (!this.$store.state.userRoles.includes('configuration.modify')) {
+          return
+        }
+
         const conf =
           configuration.data[0] === undefined
             ? configuration.data
