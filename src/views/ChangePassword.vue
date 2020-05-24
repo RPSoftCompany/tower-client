@@ -30,8 +30,8 @@
       >
         <v-card>
           <v-img
-            src="/tower.png"
             :width="384"
+            src="/tower.png"
             class="towerImage"
           />
           <v-card-text>
@@ -40,23 +40,16 @@
               v-model="form.valid"
             >
               <v-text-field
-                v-model="password.old"
-                label="Old password"
-                :rules="[rules.exists]"
-                type="password"
-                @keyup.enter="submit"
-              />
-              <v-text-field
                 v-model="password.newPass"
-                label="New password"
                 :rules="[rules.exists]"
+                label="New password"
                 type="password"
                 @keyup.enter="submit"
               />
               <v-text-field
                 v-model="password.newPassAgain"
-                label="Repeat new password"
                 :rules="[rules.exists, rules.sameAsPrev]"
+                label="Repeat new password"
                 type="password"
                 @blur="validate"
                 @keyup.enter="submit"
@@ -65,9 +58,9 @@
           </v-card-text>
           <v-card-actions>
             <v-btn
+              :disabled="!form.valid"
               color="primary"
               block
-              :disabled="!form.valid"
               @click="submit"
             >
               Change Password
