@@ -229,23 +229,6 @@
             })
 
             this.editors[i] = editor
-          } else {
-            editor = new Editor({
-              extensions: [
-                new CodeBlockHighlight({
-                  languages: {
-                    tower: this.tower,
-                  },
-                }),
-              ],
-              onUpdate: (editor) => {
-                this.newItem.template = editor.getJSON().content[0].content === undefined
-                  ? '' : editor.getJSON().content[0].content[0].text
-              },
-              content: `<pre><code>${this.newItem.template}</code></pre>`,
-            })
-
-            this.editors[i] = editor
           }
         }
         return editor
@@ -255,7 +238,18 @@
       },
       onUpdate (editor) {
         if (editor.getJSON().content[0].content !== undefined) {
-          this.items[this.panel].template = editor.getJSON().content[0].content[0].text
+          if (editor.getJSON().content.length > 1) {
+            this.items[this.panel].template = ''
+            editor.getJSON().content.forEach(el => {
+              this.items[this.panel].template += el.content[0].text
+              this.items[this.panel].template += '\n'
+            })
+
+            this.$refs[`divTextArea_${this.panel}`][0].editor
+              .setContent(`<pre><code>${this.items[this.panel].template}</code></pre>`)
+          } else {
+            this.items[this.panel].template = editor.getJSON().content[0].content[0].text
+          }
         } else {
           this.items[this.panel].template = ''
         }
