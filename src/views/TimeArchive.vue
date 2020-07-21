@@ -49,7 +49,7 @@
     </v-dialog>
     <v-dialog
       v-model="dialog"
-      width="702"
+      width="720"
       persistent
     >
       <v-card>
@@ -60,20 +60,22 @@
           Change date
         </v-card-title>
         <br>
-        <v-date-picker
-          v-model="date"
-          color="primary"
-          style="height:392px"
-          class="mx-5"
-        />
-        <v-time-picker
-          v-model="time"
-          :format="timeFormat"
-          color="primary"
-          use-seconds
-          scrollable
-          class="mx-5 mb-2"
-        />
+        <div class="text-center">
+          <v-date-picker
+            v-model="date"
+            color="primary"
+            style="height:392px"
+            class="mx-5"
+          />
+          <v-time-picker
+            v-model="time"
+            :format="timeFormat"
+            color="primary"
+            use-seconds
+            scrollable
+            class="mx-5 mb-2"
+          />
+        </div>
         <v-divider />
 
         <v-card-actions>

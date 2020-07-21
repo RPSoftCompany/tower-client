@@ -57,7 +57,6 @@
           class="elevation-1"
         >
           <v-tab>Rules</v-tab>
-          <v-tab>Constant Variables</v-tab>
           <v-tab>Restrictions</v-tab>
         </v-tabs>
         <v-tabs-items
@@ -132,13 +131,20 @@
                   variables.caseSensitive = !variables.caseSensitive
                 "
               />
-              <transition-group
+              <!-- <transition-group
                 name="fade-transition"
                 duration="100"
                 mode="out-in"
                 tag="form"
-              >
-                <v-variable
+              > -->
+              <v-constantVariable
+                v-for="variable of constVariables"
+                :key="variable.name"
+                :name="variable.name"
+                :type="variable.type"
+                :value="variable.value"
+              />
+              <!-- <v-variable
                   v-for="variable of variablesList"
                   :id="variable._id"
                   :key="variable._id"
@@ -148,13 +154,13 @@
                   :value="variable.value"
                   @remove_variable="removeVariable"
                   @modify_variable="modifyVariable"
-                />
-              </transition-group>
-              <v-variable
+                /> -->
+              <!-- </transition-group> -->
+              <!-- <v-variable
                 ref="newVariable"
                 :editable="isEditable"
                 @add_variable="addVariable"
-              />
+              /> -->
             </v-card>
           </v-tab-item>
           <v-tab-item>
@@ -217,6 +223,7 @@
 <script>
   import rule from '../components/base/rule'
   import variable from '../components/base/variable'
+  import constantVariable from '../components/base/constantVariable'
   import { mdiPlus, mdiFormatLetterCase, mdiFormatLetterCaseLower } from '@mdi/js'
 
   export default {
@@ -224,6 +231,7 @@
     components: {
       'v-rule': rule,
       'v-variable': variable,
+      'v-constantVariable': constantVariable,
     },
     data: () => ({
       base: null,
@@ -250,6 +258,9 @@
         items: [],
         filter: '',
         caseSensitive: false,
+      },
+      constantVariables: {
+        items: [],
       },
       restrictions: {
         hasRestrictions: false,
@@ -289,6 +300,43 @@
           return ''
         }
         return `Choose ${this.base.name}`
+      },
+      constVariables () {
+        if (this.constantVariables.items.length === 0) {
+          return []
+        }
+
+        const map = new Map()
+        this.constantVariables.items.forEach((el, i) => {
+          el.variables.forEach(variable => {
+            if (map.has(variable.name)) {
+              const prop = map.get(variable.name)
+              prop.history[i] = variable
+              prop.value = variable.value
+              prop.type = variable.type
+              prop.forced = variable.forced
+              prop.addIfAbsent = variable.addIfAbsent
+              map.set(variable.name, prop)
+            } else {
+              const prop = {
+                name: variable.name,
+                value: variable.value,
+                type: variable.type,
+                addIfAbsent: variable.addIfAbsent,
+                forced: variable.forced,
+                history: [],
+              }
+
+              prop.history[i] = variable
+
+              map.set(variable.name, prop)
+            }
+          })
+        })
+
+        console.log(map.entries())
+
+        return [...map.values()]
       },
       variablesList () {
         if (
@@ -407,10 +455,10 @@
             return a.name.localeCompare(b.name)
           })
 
-          this.variables.items = this.currentModel.defaultValues
-          this.variables.items = this.variables.items.sort((a, b) => {
-            return a.name.localeCompare(b.name)
-          })
+          // this.variables.items = this.currentModel.defaultValues
+          // this.variables.items = this.variables.items.sort((a, b) => {
+          //   return a.name.localeCompare(b.name)
+          // })
 
           this.restrictions.hasRestrictions = this.currentModel.options.hasRestrictions
 
@@ -440,6 +488,15 @@
               })
             }
           }
+
+          const constVariables = await this.axios.get(
+            `${
+              this.$store.state.mainUrl
+            }/constantVariables?filter={"where":{"${this.currentModel.base}":
+              "${this.currentModel.name}"},"order":"effectiveDate ASC"}`
+          )
+
+          this.constantVariables.items = constVariables.data
         } else {
           this.currentModel = null
           this.rules.items = []

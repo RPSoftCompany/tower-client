@@ -51,10 +51,10 @@
               >
                 <v-text-field
                   v-model="ldap.url"
-                  label="URL"
                   :disabled="!ldap.enabled"
                   :hint="ldap.urlHint"
                   :rules="[ldap.rules.validateUrl]"
+                  label="URL"
                   @blur="updateLdap"
                 />
               </v-col>
@@ -64,11 +64,11 @@
               >
                 <v-text-field
                   v-model="ldap.bindDN"
-                  label="BindDN"
-                  autocomplete="off"
                   :hint="ldap.bindHint"
                   :rules="[ldap.rules.required]"
                   :disabled="!ldap.enabled"
+                  label="BindDN"
+                  autocomplete="off"
                   @blur="updateLdap"
                 />
               </v-col>
@@ -78,11 +78,11 @@
               >
                 <v-text-field
                   v-model="ldap.bindCred"
+                  :rules="[ldap.rules.required]"
+                  :disabled="!ldap.enabled"
                   name="other"
                   autocomplete="off"
                   label="Bind credentials"
-                  :rules="[ldap.rules.required]"
-                  :disabled="!ldap.enabled"
                   type="password"
                 />
               </v-col>
@@ -92,11 +92,11 @@
               >
                 <v-text-field
                   v-model="ldap.searchBase"
-                  label="Search base"
-                  autocomplete="off"
                   :hint="ldap.baseHint"
                   :rules="[ldap.rules.required]"
                   :disabled="!ldap.enabled"
+                  label="Search base"
+                  autocomplete="off"
                   @blur="updateLdap"
                 />
               </v-col>
@@ -106,11 +106,11 @@
               >
                 <v-text-field
                   v-model="ldap.searchFilter"
-                  label="Search filter"
-                  autocomplete="off"
                   :rules="[ldap.rules.required]"
                   :disabled="!ldap.enabled"
                   :hint="ldap.filterHint"
+                  label="Search filter"
+                  autocomplete="off"
                   @blur="updateLdap"
                 />
               </v-col>
@@ -119,8 +119,8 @@
                 cols="2"
               >
                 <v-btn
-                  color="primary"
                   :disabled="!ldap.enabled"
+                  color="primary"
                   @click="testLdapConnection"
                 >
                   Test Connection
@@ -164,10 +164,10 @@
               >
                 <v-text-field
                   v-model="Vault.url"
-                  label="URL"
-                  autocomplete="off"
                   :hint="Vault.urlHint"
                   :disabled="!Vault.enabled"
+                  label="URL"
+                  autocomplete="off"
                   @blur="updateVault"
                 />
               </v-col>
@@ -177,9 +177,9 @@
               >
                 <v-switch
                   v-model="Vault.switch"
+                  :disabled="!Vault.enabled"
                   color="primary"
                   label="Use global token"
-                  :disabled="!Vault.enabled"
                   @change="updateVault"
                 />
               </v-col>
@@ -191,9 +191,9 @@
               >
                 <v-text-field
                   v-model="Vault.token"
+                  :disabled="!Vault.enabled"
                   label="Global token"
                   autocomplete="off"
-                  :disabled="!Vault.enabled"
                   @blur="updateVault"
                 />
               </v-col>
@@ -235,8 +235,8 @@
                 cols="2"
               >
                 <v-btn
-                  color="primary"
                   :disabled="!Vault.enabled"
+                  color="primary"
                   @click="testVaultConnection"
                 >
                   Test Connection
@@ -324,7 +324,7 @@
                       text: 'Token',
                       align: 'left',
                       value: 'token',
-                    }],
+          }],
           items: {},
           filter: {},
         },

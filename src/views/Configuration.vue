@@ -45,7 +45,69 @@
       indeterminate
     />
     <v-card
-      v-if="configuration.items.length > 0 || configuration.editMode === true"
+      v-if="configuration.showConstantVariables"
+      class="pb-2 pt-5"
+    >
+      <div class="d-flex">
+        <v-text-field
+          v-model="constantVariables.filter.filter"
+          :label="
+            constantVariables.filter.caseSensitive
+              ? 'Filter (case sensitive)'
+              : 'Filter (case insensitive)'
+          "
+          :append-icon="
+            constantVariables.filter.caseSensitive
+              ? icons.mdiFormatLetterCaseLower
+              : icons.mdiFormatLetterCase
+          "
+          clearable
+          outlined
+          dense
+          class="px-4"
+          style="max-width: 33%"
+          @click:append="
+            constantVariables.filter.caseSensitive = !constantVariables.filter
+              .caseSensitive
+          "
+        />
+      </div>
+      <v-divider class="pb-5" />
+      <div
+        class="d-flex flex-row justify-space-around"
+      >
+        <div class="subtitle-1 thirdWidth text-center font-weight-bold">
+          Name
+        </div>
+        <div class="subtitle-1 thirdWidth text-center font-weight-bold">
+          Type
+        </div>
+        <div class="subtitle-1 thirdWidth text-center font-weight-bold">
+          Value
+        </div>
+        <div style="width:160px" />
+      </div>
+      <constantVariable
+        v-for="variable of constantVariableItems"
+        :key="`${variable.name}${variable.type}${variable.value}${constantVariables.editable}`"
+        :name="variable.name"
+        :value="variable.value"
+        :type="variable.type"
+        :forced="variable.forced"
+        :addifabsent="variable.addIfAbsent"
+        :editable="constantVariables.editable"
+        @change="onConstantVariableChange"
+        @deleteVariable="onDeleteVariable"
+      />
+      <constantVariable
+        v-if="constantVariables.editable"
+        :is-new="true"
+        @addVariable="onAddVariable"
+      />
+    </v-card>
+    <v-card
+      v-if="configuration.showConstantVariables === false &&
+      ( configuration.items.length > 0 || configuration.editMode === true )"
       class="pb-2 pt-5"
     >
       <div class="d-flex">
@@ -296,6 +358,7 @@
 <script>
   import newConfigurationRow from '../components/configuration/newConfigurationRow'
   import configurationRow from '../components/configuration/configurationRow'
+  import constantVariable from '../components/base/constantVariable'
   import vueCustomScrollbar from 'vue-custom-scrollbar'
   import {
     mdiFormatLetterCaseLower, mdiFormatLetterCase, mdiPackageUp,
@@ -308,6 +371,7 @@
     components: {
       newConfigurationRow,
       configurationRow,
+      constantVariable,
       vueCustomScrollbar,
     },
     data: () => ({
@@ -345,6 +409,7 @@
         saveAsDraft: false,
         draftVersions: [],
         configInfo: 'Find your configuration',
+        showConstantVariables: false,
         loading: false,
         new: false,
         editMode: false,
@@ -356,6 +421,16 @@
         shownVersion: 0,
         minVersion: 0,
         maxVersion: 0,
+        filter: {
+          caseSensitive: false,
+          filter: null,
+        },
+      },
+      constantVariables: {
+        items: [],
+        editable: false,
+        loading: false,
+        shownVersion: 0,
         filter: {
           caseSensitive: false,
           filter: null,
@@ -452,6 +527,28 @@
               : `latest (${date})`
           const draft = this.configuration.versions[this.configuration.shownVersion].draft === true ? '[ DRAFT ]' : ''
           return `Version #${this.configuration.shownVersion} - ${versionLabel} ${draft}`
+        }
+      },
+      constantVariableItems () {
+        const filter = this.constantVariables.filter.filter
+
+        if (filter === null || filter === '') {
+          return this.constantVariables.items
+        }
+
+        if (this.constantVariables.filter.caseSensitive) {
+          return this.constantVariables.items.filter(el => {
+            return el.name.includes(filter) || el.type.includes(filter) || el.value.includes(filter)
+          })
+        } else {
+          const caseFilter = filter.toUpperCase()
+          return this.constantVariables.items.filter(el => {
+            const name = el.name === null ? '' : el.name.toUpperCase()
+            const type = el.type === null ? '' : el.type.toUpperCase()
+            const value = el.value === null ? '' : el.value.toUpperCase()
+
+            return name.includes(caseFilter) || type.includes(caseFilter) || value.includes(caseFilter)
+          })
         }
       },
       editModeItems () {
@@ -636,8 +733,105 @@
 
         this.arrayOfArrays[sequenceNumber] = newArray
       },
+      async getConstantVariables (sequenceNumber) {
+        this.constantVariables.items = []
+        this.configuration.showConstantVariables = true
+
+        if (sequenceNumber >= 0 && this.values[sequenceNumber] !== undefined) {
+          this.configuration.configInfo = 'Add or update constant variables for '
+          this.configuration.showConstantVariables = true
+
+          this.constantVariables.editable = this.isConstEditable(sequenceNumber)
+
+          let filter = ''
+          const objectFilter = new Map()
+          for (let i = 0; i <= sequenceNumber; i++) {
+            filter += `"${this.values[i].base}":"${this.values[i].name}",`
+            this.configuration.configInfo += `${this.values[i].name} > `
+          }
+
+          this.configuration.configInfo = this.configuration.configInfo.slice(0, -3)
+
+          filter = filter.slice(0, -1)
+
+          this.baseArray.forEach(el => {
+            const value = this.values[el.sequenceNumber] === null || this.values[el.sequenceNumber] === undefined
+              ? undefined : this.values[el.sequenceNumber].name
+            objectFilter.set(el.name, value)
+          })
+
+          const response = await this.axios.get(
+            `${this.$store.state.mainUrl}/constantVariables?filter={"where":{${filter}},"order":"effectiveDate ASC"}`)
+
+          if (response.status === 200) {
+            const array = []
+            response.data.forEach(el => {
+              let add = true
+              objectFilter.forEach((value, key) => {
+                if (el[key] !== value) {
+                  add = false
+                }
+              })
+              if (add) {
+                array.push(el)
+              }
+            })
+
+            const varMap = new Map()
+
+            array.forEach((el, i) => {
+              el.variables.forEach(variable => {
+                if (varMap.has(variable.name)) {
+                  const prop = varMap.get(variable.name)
+                  prop.history[i] = { value: variable.value, type: variable.type }
+                  prop.value = variable.value
+                  prop.type = variable.type
+                  prop.forced = variable.forced
+                  prop.addIfAbsent = variable.addIfAbsent
+                  varMap.set(variable.name, prop)
+                } else {
+                  const prop = {
+                    name: variable.name,
+                    value: variable.value,
+                    type: variable.type,
+                    forced: variable.forced,
+                    addIfAbsent: variable.addIfAbsent,
+                    history: [],
+                  }
+
+                  varMap.set(variable.name, prop)
+                }
+              })
+            })
+
+            this.constantVariables.items = [...varMap.values()]
+          }
+        } else {
+          this.configuration.showConstantVariables = false
+        }
+      },
+      isConstEditable (sequenceNumber) {
+        let editable = false
+
+        if (this.values[sequenceNumber] === undefined || this.values[sequenceNumber] === null) {
+          return false
+        }
+
+        const prefix = `configurationModel.${this.values[sequenceNumber].base}.${this.values[sequenceNumber].name}`
+
+        if (this.$store.state.userRoles.includes('configurationModel.modify')) {
+          if (this.$store.state.userRoles.includes(`${prefix}.modify`)) {
+            editable = true
+          } else if (!this.$store.state.userRoles.includes(`${prefix}.view`)) {
+            editable = true
+          }
+        }
+
+        return editable
+      },
       async fillNextArray (sequenceNumber, eventTarget) {
         this.configuration.items = []
+        this.constantVariables.items = []
         this.configuration.editMode = false
         this.configuration.configInfo = 'Find your configuration'
 
@@ -650,6 +844,13 @@
           }
 
           await this.getArrayFromBase(base, sequenceNumber + 1)
+          if (this.values[sequenceNumber] !== null &&
+            this.values[sequenceNumber] !== '' &&
+            this.values[sequenceNumber] !== undefined) {
+              await this.getConstantVariables(sequenceNumber)
+          } else {
+            await this.getConstantVariables(sequenceNumber - 1)
+          }
 
           this.$forceUpdate()
         } else {
@@ -664,6 +865,10 @@
           if (!undef) {
             this.$refs[eventTarget][0].blur()
             this.getConfiguration()
+          } else {
+            if (sequenceNumber - 1 >= 0) {
+              await this.getConstantVariables(sequenceNumber - 1)
+            }
           }
         }
       },
@@ -680,6 +885,7 @@
         this.configuration.versions = []
         this.promoted = []
         this.configuration.saveAsDraft = false
+        this.configuration.showConstantVariables = false
 
         this.configuration.loading = true
 
@@ -768,12 +974,12 @@
           this.baseRules = []
 
           this.values.forEach(base => {
-            base.defaultValues.forEach(defaultValue => {
-              this.defaultValues[defaultValue.name] = {
-                value: defaultValue.value,
-                cause: `Value forced by ${base.base}`,
-              }
-            })
+            // base.defaultValues.forEach(defaultValue => {
+            //   this.defaultValues[defaultValue.name] = {
+            //     value: defaultValue.value,
+            //     cause: `Value forced by ${base.base}`,
+            //   }
+            // })
 
             base.rules.forEach(baseRule => {
               this.baseRules.push(baseRule)
@@ -793,22 +999,61 @@
                 }
               })
             }
-            if (base.defaultValues !== undefined) {
-              base.defaultValues.forEach(value => {
-                const index = currentVariables.findIndex(variable => {
-                  return variable.name === value.name
-                })
+            // if (base.defaultValues !== undefined) {
+            //   base.defaultValues.forEach(value => {
+            //     const index = currentVariables.findIndex(variable => {
+            //       return variable.name === value.name
+            //     })
 
-                if (index !== -1) {
-                  currentVariables[index].forced_value = true
-                  currentVariables[index].value = value.value
-                  currentVariables[
-                    index
-                  ].force_cause = `Value forced by ${base.base}`
-                }
-              })
-            }
+            //     if (index !== -1) {
+            //       currentVariables[index].forced_value = true
+            //       currentVariables[index].value = value.value
+            //       currentVariables[
+            //         index
+            //       ].force_cause = `Value forced by ${base.base}`
+            //     }
+            //   })
+            // }
           })
+
+          const where = {}
+          this.values.forEach(el => {
+            where[el.base] = el.name
+          })
+
+          const constVariablesRes = await this.axios.get(`${this.$store.state.mainUrl
+          }/constantVariables/findLatest?filter=${JSON.stringify(where)}`)
+          if (constVariablesRes.status === 200) {
+            constVariablesRes.data.forEach(constVariable => {
+              const index = currentVariables.findIndex(variable => {
+                return variable.name === constVariable.name
+              })
+
+              this.defaultValues[constVariable.name] = constVariable
+
+              if (index !== -1) {
+                if (constVariable.forced) {
+                  currentVariables[index].forced_value = true
+                  currentVariables[index].value = constVariable.value
+                  currentVariables[index].force_cause = 'Value forced by constant variable'
+                }
+              } else {
+                if (constVariable.addIfAbsent) {
+                  const newVariable = {}
+                  newVariable.name = constVariable.name
+                  newVariable.type = constVariable.type
+                  newVariable.value = constVariable.value
+                  newVariable.versions = new Array(configuration.data[0].version)
+                  if (constVariable.forced) {
+                    newVariable.forced_value = true
+                    newVariable.force_cause = 'Value forced by constant variable'
+                  }
+
+                  currentVariables.push(newVariable)
+                }
+              }
+            })
+          }
 
           if (promotedConfiguration === undefined) {
             this.configuration.minVersion =
@@ -885,10 +1130,10 @@
           }
 
           const findDefault = this.defaultValues[data.name]
-          if (findDefault !== undefined) {
+          if (findDefault !== undefined && findDefault.forced) {
             item.value = findDefault.value
             item.forced_value = true
-            item.force_cause = findDefault.cause
+            item.force_cause = 'Value forced by constant variable'
           }
 
           item.rules = this.baseRules.filter(baseRule => {
@@ -1061,16 +1306,100 @@
               }
 
               const findDefault = this.defaultValues[variable.name]
-              if (findDefault !== undefined) {
+              if (findDefault !== undefined && findDefault.forced) {
                 variable.value = findDefault.value
                 variable.forced_value = true
-                variable.force_cause = findDefault.cause
+                variable.force_cause = 'Value forced by constant variable'
               }
             })
           })
 
           this.configuration.items = [...newArray]
         }
+      },
+      async onConstantVariableChange (all) {
+        this.constantVariables.items.map(el => {
+          if (el.name === all.name) {
+            el.type = all.type
+            el.value = all.value
+            el.forced = all.forced
+            el.addIfAbsent = all.addIfAbsent
+          }
+        })
+
+        const post = {
+          variables: [],
+        }
+
+        this.constantVariables.items.forEach(el => {
+          post.variables.push({
+            name: el.name,
+            value: el.value,
+            type: el.type,
+            forced: el.forced,
+            addIfAbsent: el.addIfAbsent,
+          })
+        })
+
+        this.values.forEach(el => {
+          if (el !== null && el !== undefined) {
+            post[el.base] = el.name
+          }
+        })
+
+        await this.axios.post(`${this.$store.state.mainUrl}/constantVariables`, post)
+      },
+      async onAddVariable (all) {
+        this.constantVariables.items.push(all)
+
+        const post = {
+          variables: [],
+        }
+
+        this.constantVariables.items.forEach(el => {
+          post.variables.push({
+            name: el.name,
+            value: el.value,
+            type: el.type,
+            forced: el.forced,
+            addIfAbsent: el.addIfAbsent,
+          })
+        })
+
+        this.values.forEach(el => {
+          if (el !== null && el !== undefined) {
+            post[el.base] = el.name
+          }
+        })
+
+        await this.axios.post(`${this.$store.state.mainUrl}/constantVariables`, post)
+      },
+      async onDeleteVariable (name) {
+        this.constantVariables.items = this.constantVariables.items.filter(el => {
+          return el.name !== name
+        })
+
+        const post = {
+          variables: [],
+        }
+
+        this.constantVariables.items.forEach(el => {
+          post.variables.push({
+            name: el.name,
+            value: el.value,
+            type: el.type,
+            forced: el.forced,
+            addIfAbsent: el.addIfAbsent,
+          })
+        })
+
+        this.values.forEach(el => {
+          if (el !== null && el !== undefined) {
+            post[el.base] = el.name
+          }
+        })
+
+        await this.axios.post(`${this.$store.state.mainUrl}/constantVariables`, post)
       },
     },
   }
