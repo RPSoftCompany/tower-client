@@ -140,4 +140,12 @@
 .slowfade-leave-active {
   opacity: 0;
 }
+
+.v-time-picker-title__time .v-picker__title__btn, .v-time-picker-title__time span {
+  font-size: 70px !important;
+}
+
+.v-picker__title {
+  height: 90px !important;
+}
 </style>

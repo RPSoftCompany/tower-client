@@ -66,13 +66,16 @@
             color="primary"
             style="height:392px"
             class="mx-5"
+            elevation="1"
           />
           <v-time-picker
             v-model="time"
             :format="timeFormat"
             color="primary"
             use-seconds
+            style="height:392px"
             scrollable
+            elevation="1"
             class="mx-5 mb-2"
           />
         </div>
@@ -94,6 +97,7 @@
       <v-autocomplete
         v-for="base of baseArray"
         ref="base"
+        :loading="loading"
         :key="base.name"
         v-model="values[base.sequenceNumber]"
         :disabled="configuration.items.length > 3"
@@ -177,7 +181,7 @@
       values: [],
       date: new Date().toISOString().substr(0, 10),
       dateMenu: false,
-      time: '23:59:59',
+      time: '23:59:00',
       timeMenu: false,
       baseArray: [],
       arrayOfArrays: [],
@@ -293,7 +297,7 @@
           date = new Date().toISOString().substr(0, 10)
         }
         if (time === undefined) {
-          time = '23:59'
+          time = '23:59:00'
         }
 
         this.loading = true
@@ -308,8 +312,10 @@
           filter = filter.substring(0, filter.length - 1)
         }
 
+        const d = new Date(`${date}T${time}`)
+
         const configuration = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurations/findByDate?filter={${filter}}&date=${date}T${time}`
+          `${this.$store.state.mainUrl}/configurations/findByDate?filter={${filter}}&date=${d.toUTCString()}`
         )
 
         if (configuration.data.effectiveDate === undefined) {
@@ -325,11 +331,12 @@
             configuration.data.createdByUser = details.data.username
           }
 
-          configuration.data.effectiveDate = `${this.date}T${this.time}`
+          configuration.data.effectiveDate = `${d.toUTCString()}`
           configuration.data.__filter = filter
 
           if (index !== undefined) {
             this.configuration.items[index] = configuration.data
+            this.$refs.comparisonTable.onConfigurationsChange()
             this.$refs.comparisonTable.forceUpdate()
           } else {
             this.configuration.items.push(configuration.data)
@@ -343,7 +350,10 @@
       async dateHeaderClicked ({ index, dateTime }) {
         const date = new Date(dateTime)
         this.date = date.toISOString().substr(0, 10)
-        this.time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+        const hours = `${date.getHours()}`.length === 1 ? `0${date.getHours()}` : `${date.getHours()}`
+        const minutes = `${date.getMinutes()}`.length === 1 ? `0${date.getMinutes()}` : `${date.getMinutes()}`
+        const seconds = `${date.getSeconds()}`.length === 1 ? `0${date.getSeconds()}` : `${date.getSeconds()}`
+        this.time = `${hours}:${minutes}:${seconds}`
 
         this.configToTimeChange = index
 
