@@ -30,7 +30,7 @@
     </v-dialog>
     <drawer v-if="loggedIn" />
     <toolbar v-if="loggedIn" />
-    <v-content>
+    <v-main>
       <v-container
         fluid
         style="padding-left: 70px; height: 100%"
@@ -45,7 +45,7 @@
           />
         </transition>
       </v-container>
-    </v-content>
+    </v-main>
     <footerElement />
   </v-app>
 </template>
