@@ -111,60 +111,6 @@
           </v-tab-item>
           <v-tab-item>
             <v-card flat>
-              <v-text-field
-                v-model="variables.filter"
-                :label="
-                  variables.caseSensitive
-                    ? 'Filter (case sensitive)'
-                    : 'Filter (case insensitive)'
-                "
-                :append-icon="
-                  variables.caseSensitive
-                    ? icons.mdiFormatLetterCaseLower
-                    : icons.mdiFormatLetterCase
-                "
-                outlined
-                clearable
-                dense
-                class="px-4"
-                @click:append="
-                  variables.caseSensitive = !variables.caseSensitive
-                "
-              />
-              <!-- <transition-group
-                name="fade-transition"
-                duration="100"
-                mode="out-in"
-                tag="form"
-              > -->
-              <v-constantVariable
-                v-for="variable of constVariables"
-                :key="variable.name"
-                :name="variable.name"
-                :type="variable.type"
-                :value="variable.value"
-              />
-              <!-- <v-variable
-                  v-for="variable of variablesList"
-                  :id="variable._id"
-                  :key="variable._id"
-                  :name="variable.name"
-                  :editable="isEditable"
-                  :is-new="false"
-                  :value="variable.value"
-                  @remove_variable="removeVariable"
-                  @modify_variable="modifyVariable"
-                /> -->
-              <!-- </transition-group> -->
-              <!-- <v-variable
-                ref="newVariable"
-                :editable="isEditable"
-                @add_variable="addVariable"
-              /> -->
-            </v-card>
-          </v-tab-item>
-          <v-tab-item>
-            <v-card flat>
               <v-checkbox
                 v-model="restrictions.hasRestrictions"
                 :disabled="!isEditable"
@@ -454,11 +400,6 @@
           this.rules.items = this.rules.items.sort((a, b) => {
             return a.name.localeCompare(b.name)
           })
-
-          // this.variables.items = this.currentModel.defaultValues
-          // this.variables.items = this.variables.items.sort((a, b) => {
-          //   return a.name.localeCompare(b.name)
-          // })
 
           this.restrictions.hasRestrictions = this.currentModel.options.hasRestrictions
 
