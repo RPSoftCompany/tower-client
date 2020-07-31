@@ -25,7 +25,7 @@
     >
       <draggable
         :list="items"
-        :options="{ handle: '.handler' }"
+        handle=".handle"
         style="width: 100%"
         @end="dragEnded"
       >

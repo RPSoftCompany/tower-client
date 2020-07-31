@@ -40,7 +40,7 @@
       {{ configuration.configInfo }}
     </div>
     <v-progress-linear
-      :active="configuration.loading"
+      :active="configuration.loading || configuration.editModeDisabled"
       :height="3"
       indeterminate
     />
@@ -1171,32 +1171,32 @@
         }
       },
       slowlyAddItems (i) {
-        // setTimeout(() => {
-        //   const modif = 5
-        //   const slice = this.configuration.backupItems.slice(
-        //     i * modif,
-        //     (i + 1) * modif
-        //   )
-        //   if (slice.length === 0) {
-        //     this.configuration.editModeDisabled = false
-        //     if (!this.configuration.editMode) {
-        //       for (const row of this.$refs.configRows) {
-        //         row.valid()
-        //       }
-        //     }
-        //   } else {
-        //     this.configuration.items = Object.freeze(this.configuration.items.concat(slice))
-        //     this.slowlyAddItems(++i)
-        //   }
-        // }, 5)
-
-        this.configuration.items = Object.freeze([...this.configuration.backupItems])
-        this.configuration.editModeDisabled = false
-        this.$nextTick(() => {
-          for (const row of this.$refs.configRows) {
-            row.valid()
+        setTimeout(() => {
+          const modif = 5
+          const slice = this.configuration.backupItems.slice(
+            i * modif,
+            (i + 1) * modif
+          )
+          if (slice.length === 0) {
+            this.configuration.editModeDisabled = false
+            if (!this.configuration.editMode) {
+              for (const row of this.$refs.configRows) {
+                row.valid()
+              }
+            }
+          } else {
+            this.configuration.items = Object.freeze(this.configuration.items.concat(slice))
+            this.slowlyAddItems(++i)
           }
-        })
+        }, 5)
+
+        // this.configuration.items = Object.freeze([...this.configuration.backupItems])
+        // this.configuration.editModeDisabled = false
+        // this.$nextTick(() => {
+        //   for (const row of this.$refs.configRows) {
+        //     row.valid()
+        //   }
+        // })
       },
       changeConfigurationRow (data) {
         this.configuration.items.map(el => {

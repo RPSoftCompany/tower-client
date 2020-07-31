@@ -24,14 +24,14 @@
         <v-autocomplete
           ref="userSelect"
           v-model="user.current"
-          class="pa-2"
           :search-input.sync="user.text"
-          label="User"
           :items="user.items"
+          :append-outer-icon="icons.mdiPlus"
+          class="pa-2"
+          label="User"
           item-text="username"
           clearable
           autocomplete="off"
-          :append-outer-icon="icons.mdiPlus"
           return-object
           @click:append-outer="addUser"
           @change="onUserChange"
@@ -70,8 +70,8 @@
       <v-text-field
         v-if="user.current.technicalUser"
         v-model="user.token"
-        class="px-2"
         :readonly="true"
+        class="px-2"
         label="Techincal user access token"
       />
     </div>

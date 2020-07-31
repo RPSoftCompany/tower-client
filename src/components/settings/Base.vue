@@ -20,9 +20,9 @@
     class="py-3"
   >
     <draggable
-      style="width: 100%"
       :list="items"
-      :options="{ handle: '.handler' }"
+      handle=".handle"
+      style="width: 100%"
       @end="dragEnded"
     >
       <v-card
@@ -58,10 +58,10 @@
     </draggable>
     <v-text-field
       v-model="appendText"
-      label="New Base"
-      class="mx-5 mt-5"
       :prepend-icon="allMdi.mdiDatabasePlus"
       :append-icon="allMdi.mdiPlus"
+      label="New Base"
+      class="mx-5 mt-5"
       @click:append="addBase"
     />
     <v-dialog
@@ -76,9 +76,9 @@
         <v-divider />
         <v-text-field
           v-model="iconsFilter"
+          :prepend-icon="allMdi.mdiMagnify"
           label="Search"
           class="mx-3"
-          :prepend-icon="allMdi.mdiMagnify"
         />
         <div class="d-flex flex-row flex-wrap">
           <div
@@ -100,9 +100,9 @@
           </div>
           <v-pagination
             v-model="iconsPage"
-            class="pb-3"
             :length="paginationLength"
             :total-visible="10"
+            class="pb-3"
           />
         </div>
       </v-card>
