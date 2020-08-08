@@ -21,7 +21,7 @@
   >
     <draggable
       :list="items"
-      handle=".handle"
+      handle=".handler"
       style="width: 100%"
       @end="dragEnded"
     >
@@ -30,8 +30,11 @@
         :key="item.name"
         class="mx-3 px-3 d-flex flex-row my-1 elevation-1 py-5"
       >
-        <v-icon class="handler mr-3 mt-2">
-          {{ allMdi.mdiDotsVertical }}
+        <v-icon
+          :class="{handler: !changeInProgress, loading: changeInProgress}"
+          class="mr-3 mt-2"
+        >
+          {{ !changeInProgress ? allMdi.mdiDotsVertical : allMdi.mdiTimerSandFull }}
         </v-icon>
         <v-btn
           icon
@@ -127,6 +130,8 @@
       iconsPerPage: 35,
       currentIconItem: null,
 
+      changeInProgress: false,
+
       allMdi: allMdi,
 
       appendText: null,
@@ -170,12 +175,16 @@
 
         changedItem.sequenceNumber = item.newIndex
 
+        this.changeInProgress = true
+
         await this.axios.post(
           `${this.$store.state.mainUrl}/baseConfigurations/changeSequence`,
           changedItem
         )
 
         this.$eventHub.$emit('updateIcons')
+
+        this.changeInProgress = false
       },
       async changeIcon (icon) {
         const currentItem = this.currentIconItem
@@ -230,16 +239,30 @@
 
 <style lang="scss" scoped>
 .handler {
-	cursor: grab;
+  cursor: grab;
 }
 
 .baseIcon {
-	border: solid;
-	border-width: 1px;
+  border: solid;
+  border-width: 1px;
 }
 
 .iconHover:hover {
-	background: lightgray;
-	transition: background 0.4s;
+  background: lightgray;
+  transition: background 0.4s;
+}
+
+.loading {
+  animation: rotation 2s infinite linear;
+  -webkit-animation: rotation 2s infinite linear;
+}
+
+@-webkit-keyframes rotation {
+		from {
+				-webkit-transform: rotate(0deg);
+		}
+		to {
+				-webkit-transform: rotate(359deg);
+		}
 }
 </style>

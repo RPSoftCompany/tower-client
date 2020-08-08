@@ -25,7 +25,7 @@
     >
       <draggable
         :list="items"
-        handle=".handle"
+        handle=".handler"
         style="width: 100%"
         @end="dragEnded"
       >

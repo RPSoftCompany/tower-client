@@ -170,7 +170,11 @@
   import rule from '../components/base/rule'
   import variable from '../components/base/variable'
   import constantVariable from '../components/base/constantVariable'
-  import { mdiPlus, mdiFormatLetterCase, mdiFormatLetterCaseLower } from '@mdi/js'
+  import {
+    mdiPlus,
+    mdiFormatLetterCase,
+    mdiFormatLetterCaseLower,
+  } from '@mdi/js'
 
   export default {
     name: 'Base',
@@ -235,8 +239,7 @@
       },
       noDataText () {
         if (this.base !== null && this.modelText !== null) {
-          return `No results matching <strong>${
-          this.modelText}</strong>. Press <kbd>+</kbd> button on the right to create a new ${this.base.name}`
+          return `No results matching <strong>${this.modelText}</strong>. Press <kbd>+</kbd> button on the right to create a new ${this.base.name}`
         } else {
           return 'Type name and press <kbd>+</kbd> button to create new model'
         }
@@ -246,43 +249,6 @@
           return ''
         }
         return `Choose ${this.base.name}`
-      },
-      constVariables () {
-        if (this.constantVariables.items.length === 0) {
-          return []
-        }
-
-        const map = new Map()
-        this.constantVariables.items.forEach((el, i) => {
-          el.variables.forEach(variable => {
-            if (map.has(variable.name)) {
-              const prop = map.get(variable.name)
-              prop.history[i] = variable
-              prop.value = variable.value
-              prop.type = variable.type
-              prop.forced = variable.forced
-              prop.addIfAbsent = variable.addIfAbsent
-              map.set(variable.name, prop)
-            } else {
-              const prop = {
-                name: variable.name,
-                value: variable.value,
-                type: variable.type,
-                addIfAbsent: variable.addIfAbsent,
-                forced: variable.forced,
-                history: [],
-              }
-
-              prop.history[i] = variable
-
-              map.set(variable.name, prop)
-            }
-          })
-        })
-
-        console.log(map.entries())
-
-        return [...map.values()]
       },
       variablesList () {
         if (
@@ -430,14 +396,14 @@
             }
           }
 
-          const constVariables = await this.axios.get(
-            `${
-              this.$store.state.mainUrl
-            }/constantVariables?filter={"where":{"${this.currentModel.base}":
-              "${this.currentModel.name}"},"order":"effectiveDate ASC"}`
-          )
+        // const constVariables = await this.axios.get(
+        //   `${
+        //     this.$store.state.mainUrl
+        //   }/constantVariables?filter={"where":{"${this.currentModel.base}":
+        //     "${this.currentModel.name}"},"order":"effectiveDate ASC"}`
+        // )
 
-          this.constantVariables.items = constVariables.data
+        // this.constantVariables.items = constVariables.data
         } else {
           this.currentModel = null
           this.rules.items = []
@@ -574,13 +540,11 @@
       async modifyRestriction (data) {
         if (data.value === true) {
           await this.axios.post(
-            `${this.$store.state.mainUrl}/configurationModels/${
-            this.currentModel.id}/restriction?restriction=${data.item.name}`
+            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/restriction?restriction=${data.item.name}`
           )
         } else {
           await this.axios.delete(
-            `${this.$store.state.mainUrl}/configurationModels/${
-            this.currentModel.id}/restriction?restriction=${data.item.name}`
+            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/restriction?restriction=${data.item.name}`
           )
         }
       },
