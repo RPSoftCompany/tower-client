@@ -93,41 +93,41 @@
 
 <style lang="scss" scoped>
 .profButtonContainer {
-	width: 44px;
-	height: 34px;
-	margin-top: 4px;
-	margin-right: 4px;
-	padding: 0;
-	background-color: rgba(255, 255, 255, 0);
+  width: 44px;
+  height: 34px;
+  margin-top: 4px;
+  margin-right: 4px;
+  padding: 0;
+  background-color: rgba(255, 255, 255, 0);
 
-	clip-path: circle(20px at 12px 24px);
-	transition: all 0.3s linear;
+  clip-path: circle(20px at 12px 24px);
+  transition: all 0.3s linear;
 
-	.inner {
-		float: right;
-		cursor: default;
-		transition: all 0.3s linear;
-		padding-top: 10px;
-	}
+  .inner {
+    float: right;
+    cursor: default;
+    transition: all 0.3s linear;
+    padding-top: 10px;
+  }
 
-	.innerOpacity {
-		opacity: 0;
-		transition: all 0.1s linear;
-	}
+  .innerOpacity {
+    opacity: 0;
+    transition: all 0.1s linear;
+  }
 
-	&:hover {
-		background-color: white;
-		clip-path: circle(200% at 288px 24px);
-		width: 300px;
-		height: 145px;
+  &:hover {
+    background-color: white;
+    clip-path: circle(200% at 288px 24px);
+    width: 300px;
+    height: 145px;
 
-		.inner {
-			color: rgba(255, 255, 255, 0);
-		}
+    .inner {
+      color: rgba(255, 255, 255, 0);
+    }
 
-		.innerOpacity {
-			opacity: 1;
-		}
-	}
+    .innerOpacity {
+      opacity: 1;
+    }
+  }
 }
 </style>

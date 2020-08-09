@@ -3,7 +3,9 @@
     "es6": true,
     "node": true
   },
-  "extends": ["vuetify"],
+  "extends": [
+    "vuetify"
+  ],
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
@@ -13,7 +15,7 @@
     "sourceType": "module"
   },
   "rules": {
-    "allowIndentationTabs": true,
+    "allowIndentationTabs": 2,
     "max-len": [
       "error",
       {
