@@ -75,15 +75,16 @@
         this.bases = []
 
         const basesResponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
         )
 
         const modelsResponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC"}`
+          `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC"}`,
         )
 
         const rolesResponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/Roles?filter={"order":"name ASC","where":{"name":{"like":"configurationModel."}}}`
+          `${this.$store.state.mainUrl
+          }/Roles?filter={"order":"name ASC","where":{"name":{"like":"configurationModel."}}}`,
         )
 
         basesResponse.data.forEach(base => {
@@ -125,12 +126,12 @@
           })
         } else {
           const rolesResponse = await this.axios.get(
-            `${this.$store.state.mainUrl}/Roles?filter={"order":"name ASC","where":{"name":{"like":"${roleName}."}}}`
+            `${this.$store.state.mainUrl}/Roles?filter={"order":"name ASC","where":{"name":{"like":"${roleName}."}}}`,
           )
 
           rolesResponse.data.forEach(async role => {
             await this.axios.delete(
-              `${this.$store.state.mainUrl}/Roles/${role.id}`
+              `${this.$store.state.mainUrl}/Roles/${role.id}`,
             )
           })
         }
@@ -148,7 +149,7 @@
             })
           } else {
             const rolesResponse = await this.axios.get(
-              `${this.$store.state.mainUrl}/Roles?filter={"order":"name ASC","where":{"name":{"like":"${value}."}}}`
+              `${this.$store.state.mainUrl}/Roles?filter={"order":"name ASC","where":{"name":{"like":"${value}."}}}`,
             )
 
             rolesResponse.data.forEach(async role => {

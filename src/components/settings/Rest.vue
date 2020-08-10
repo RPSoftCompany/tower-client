@@ -193,13 +193,13 @@
     methods: {
       async resetData () {
         const response = await this.axios.get(
-          `${this.$store.state.mainUrl}/restConfigurations?filter={"order":"sequenceNumber ASC"}`
+          `${this.$store.state.mainUrl}/restConfigurations?filter={"order":"sequenceNumber ASC"}`,
         )
 
         this.items = response.data
 
         const responseBase = await this.axios.get(
-          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
         )
 
         this.bases = responseBase.data
@@ -295,7 +295,7 @@
 
         await this.axios.post(
           `${this.$store.state.mainUrl}/restConfigurations`,
-          newConfig
+          newConfig,
         )
 
         this.newItem.url = null
@@ -315,7 +315,7 @@
 
         await this.axios.put(
           `${this.$store.state.mainUrl}/restConfigurations`,
-          this.items[i]
+          this.items[i],
         )
       },
       async dragEnded (item) {
@@ -328,7 +328,7 @@
 
         await this.axios.post(
           `${this.$store.state.mainUrl}/restConfigurations/changeSequence`,
-          changedItem
+          changedItem,
         )
       },
     },

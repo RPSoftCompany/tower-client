@@ -87,7 +87,8 @@
     computed: {
       noDataText () {
         if (this.group.text !== null) {
-          return `No results matching <strong>${this.group.text}</strong>. Press <kbd>+</kbd> button on the right to create group with this name`
+          return `No results matching <strong>${this.group.text
+          }</strong>. Press <kbd>+</kbd> button on the right to create group with this name`
         } else {
           return 'Type name and press <kbd>+</kbd> button to create new group'
         }
@@ -101,13 +102,13 @@
         this.role.prev = []
         this.group.current = null
         const response = await this.axios.get(
-          `${this.$store.state.mainUrl}/Groups?filter={"order":"name ASC"}`
+          `${this.$store.state.mainUrl}/Groups?filter={"order":"name ASC"}`,
         )
 
         this.group.items = response.data
 
         const roleResponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/Roles?filter={"order":"name ASC"}`
+          `${this.$store.state.mainUrl}/Roles?filter={"order":"name ASC"}`,
         )
 
         this.role.items = roleResponse.data
@@ -121,7 +122,7 @@
           {
             name: this.group.text,
             roles: [],
-          }
+          },
         )
 
         this.$refs.groupSelect.isMenuActive = false
@@ -156,10 +157,10 @@
         if (diff.length > 0) {
           if (change.length > this.role.prev.length) {
             await this.axios.post(`${this.$store.state.mainUrl}/groups/${
-            this.group.current.id}/role?role=${diff[0].name}`)
+              this.group.current.id}/role?role=${diff[0].name}`)
           } else {
             await this.axios.delete(`${this.$store.state.mainUrl}/groups/${
-            this.group.current.id}/role?role=${diff[0].name}`)
+              this.group.current.id}/role?role=${diff[0].name}`)
           }
         }
 

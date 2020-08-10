@@ -62,18 +62,18 @@
 
 <style scoped>
 .toolbarTitle {
-	font-weight: 300 !important;
-	margin-top: 4px;
+  font-weight: 300 !important;
+  margin-top: 4px;
 }
 .login {
-	float: right;
-	position: absolute;
-	right: 0px;
-	top: 0px;
+  float: right;
+  position: absolute;
+  right: 0px;
+  top: 0px;
 }
 .tower {
-	float: right;
-	margin-top: 3px;
-	color: gray;
+  float: right;
+  margin-top: 3px;
+  color: gray;
 }
 </style>

@@ -324,7 +324,7 @@
                       text: 'Token',
                       align: 'left',
                       value: 'token',
-          }],
+                    }],
           items: {},
           filter: {},
         },
@@ -340,7 +340,7 @@
         this.Vault.bases = []
 
         const response = await this.axios.get(
-          `${this.$store.state.mainUrl}/connections`
+          `${this.$store.state.mainUrl}/connections`,
         )
 
         response.data.forEach(el => {
@@ -371,7 +371,7 @@
         })
 
         const basesResponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
         )
 
         basesResponse.data.forEach(el => {
@@ -382,7 +382,7 @@
         })
 
         const modelsResponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC"}`
+          `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC"}`,
         )
 
         modelsResponse.data.forEach(el => {
@@ -407,7 +407,7 @@
             `${this.$store.state.mainUrl}/connections/testConnection?type=LDAP`,
             {
               timeout: 10000,
-            }
+            },
           )
 
           if (response) {
@@ -443,7 +443,7 @@
               searchBase: this.ldap.searchBase,
               searchFilter: this.ldap.searchFilter,
               enabled: this.ldap.enabled,
-            }
+            },
           )
         }
       },
@@ -453,7 +453,7 @@
             `${this.$store.state.mainUrl}/connections/testConnection?type=Vault`,
             {
               timeout: 10000,
-            }
+            },
           )
 
           if (response) {
@@ -480,7 +480,7 @@
               enabled: this.Vault.enabled,
               useGlobalToken: this.Vault.switch,
               tokens: this.Vault.tokens.items,
-            }
+            },
           )
         }
       },

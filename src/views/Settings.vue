@@ -96,7 +96,10 @@
   import GroupsSettings from '../components/settings/Group'
   import ConnectionsSettings from '../components/settings/Connection'
 
-  import { mdiAccount, mdiAccountGroup, mdiDatabaseEdit, mdiTransitConnection, mdiHook, mdiSecurity, mdiPackageUp, mdiFolderKeyNetworkOutline } from '@mdi/js'
+  import {
+    mdiAccount, mdiAccountGroup, mdiDatabaseEdit,
+    mdiTransitConnection, mdiHook, mdiSecurity, mdiPackageUp, mdiFolderKeyNetworkOutline,
+  } from '@mdi/js'
 
   export default {
     name: 'Settings',

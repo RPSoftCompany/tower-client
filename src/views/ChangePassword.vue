@@ -101,7 +101,7 @@
 
         await this.axios.post(
           `${this.$store.state.mainUrl}/members/changeUserPassword`,
-          { newPassword: this.password.newPass }
+          { newPassword: this.password.newPass },
         )
 
         this.$router.push('/login')

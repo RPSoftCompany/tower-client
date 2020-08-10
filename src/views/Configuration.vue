@@ -107,7 +107,7 @@
     </v-card>
     <v-card
       v-if="configuration.showConstantVariables === false &&
-      ( configuration.items.length > 0 || configuration.editMode === true )"
+        ( configuration.items.length > 0 || configuration.editMode === true )"
       class="pb-2 pt-5"
     >
       <div class="d-flex">
@@ -600,13 +600,13 @@
 
           if (this.configuration.versions[this.configuration.shownVersion] !== undefined &&
             this.configuration.backupItems.length === this.configuration.items.length) {
-              toAdd = this.configuration.versions[this.configuration.shownVersion].variables.filter(el => {
-                const element = this.configuration.items.find(existing => {
-                  return existing.name === el.name
-                })
-                return element === undefined
+            toAdd = this.configuration.versions[this.configuration.shownVersion].variables.filter(el => {
+              const element = this.configuration.items.find(existing => {
+                return existing.name === el.name
               })
-            }
+              return element === undefined
+            })
+          }
 
           let filter = this.configuration.filter.filter
           if (filter === null || filter === undefined || filter === '') {
@@ -675,7 +675,7 @@
     },
     async created () {
       const response = await this.axios.get(
-        `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+        `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
       )
 
       this.baseArray = response.data
@@ -693,7 +693,7 @@
       }
 
       const roles = await this.axios.get(
-        `${this.$store.state.mainUrl}/members/getUserRoles`
+        `${this.$store.state.mainUrl}/members/getUserRoles`,
       )
 
       this.$store.commit('setUserRoles', roles.data)
@@ -703,7 +703,7 @@
         this.baseArray[sequenceNumber].loading = true
 
         const array = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`
+          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`,
         )
 
         let restrictions = []
@@ -847,7 +847,7 @@
           if (this.values[sequenceNumber] !== null &&
             this.values[sequenceNumber] !== '' &&
             this.values[sequenceNumber] !== undefined) {
-              await this.getConstantVariables(sequenceNumber)
+            await this.getConstantVariables(sequenceNumber)
           } else {
             await this.getConstantVariables(sequenceNumber - 1)
           }
@@ -890,7 +890,7 @@
         this.configuration.loading = true
 
         const configuration = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurations?filter={"where":{${filter}},"order":"version DESC"}`
+          `${this.$store.state.mainUrl}/configurations?filter={"where":{${filter}},"order":"version DESC"}`,
         )
 
         this.configuration.draftVersions = []
@@ -926,7 +926,7 @@
             'Configuration not found, you can create new one'
         } else {
           this.configuration.configInfo = `Create new configuration, version #${configuration
-          .data[0].version + 1}`
+            .data[0].version + 1}`
 
           this.configuration.shownVersion = configuration.data[0].version
           this.configuration.versions = []
@@ -1080,7 +1080,7 @@
 
         const candidates = await this.axios.post(
           `${this.$store.state.mainUrl}/configurations/promotionCandidates`,
-          filter
+          filter,
         )
 
         this.promoted = candidates.data
@@ -1175,7 +1175,7 @@
           const modif = 5
           const slice = this.configuration.backupItems.slice(
             i * modif,
-            (i + 1) * modif
+            (i + 1) * modif,
           )
           if (slice.length === 0) {
             this.configuration.editModeDisabled = false
@@ -1211,7 +1211,7 @@
           if (!row.deleted && !row.valid()) {
             this.$store.commit(
               'setError',
-              'Your configuration is invalid. Please review and correct it.'
+              'Your configuration is invalid. Please review and correct it.',
             )
             return
           }
@@ -1245,7 +1245,7 @@
 
         await this.axios.post(
           `${this.$store.state.mainUrl}/configurations`,
-          conf
+          conf,
         )
 
         this.getConfiguration()

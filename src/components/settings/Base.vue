@@ -162,7 +162,7 @@
     methods: {
       async resetData () {
         const response = await this.axios.get(
-          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
         )
 
         this.items = response.data
@@ -179,7 +179,7 @@
 
         await this.axios.post(
           `${this.$store.state.mainUrl}/baseConfigurations/changeSequence`,
-          changedItem
+          changedItem,
         )
 
         this.$eventHub.$emit('updateIcons')
@@ -195,7 +195,7 @@
 
         await this.axios.put(
           `${this.$store.state.mainUrl}/baseConfigurations`,
-          currentItem
+          currentItem,
         )
 
         this.currentIconItem.icon = `${this.allMdi[icon]}`
@@ -219,7 +219,7 @@
 
         await this.axios.post(
           `${this.$store.state.mainUrl}/baseConfigurations`,
-          newBase
+          newBase,
         )
 
         this.resetData()
@@ -227,7 +227,7 @@
       },
       async deleteBase (item) {
         await this.axios.delete(
-          `${this.$store.state.mainUrl}/baseConfigurations/${item.id}`
+          `${this.$store.state.mainUrl}/baseConfigurations/${item.id}`,
         )
 
         this.resetData()
@@ -258,11 +258,11 @@
 }
 
 @-webkit-keyframes rotation {
-		from {
-				-webkit-transform: rotate(0deg);
-		}
-		to {
-				-webkit-transform: rotate(359deg);
-		}
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(359deg);
+    }
 }
 </style>

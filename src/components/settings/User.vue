@@ -155,11 +155,11 @@
         this.groups.current = null
 
         const response = await this.axios.get(
-          `${this.$store.state.mainUrl}/members?filter={"where":{"username":{"neq":"admin"}}}`
+          `${this.$store.state.mainUrl}/members?filter={"where":{"username":{"neq":"admin"}}}`,
         )
 
         const groupsRes = await this.axios.get(
-          `${this.$store.state.mainUrl}/groups`
+          `${this.$store.state.mainUrl}/groups`,
         )
 
         this.groups.items = groupsRes.data
@@ -174,7 +174,7 @@
             technicalUser: false,
             password: this.newPassword,
             groups: [],
-          }
+          },
         )
 
         this.user.items.push(response.data)
@@ -203,27 +203,27 @@
         this.user.token = null
         if (this.user.current.technicalUser) {
           const response = await this.axios.get(
-            `${this.$store.state.mainUrl}/members/getTechnicalUserToken?userId=${this.user.current.id}`
+            `${this.$store.state.mainUrl}/members/getTechnicalUserToken?userId=${this.user.current.id}`,
           )
 
           this.user.token = response.data
         }
       },
       async onGroupChange () {
-        this.user.current.groups = new Array()
+        this.user.current.groups = []
         this.groups.current.forEach(group => {
           this.user.current.groups.push(group.name)
         })
 
         await this.axios.patch(
           `${this.$store.state.mainUrl}/members`,
-          this.user.current
+          this.user.current,
         )
       },
       async onTechnicalChange () {
         await this.axios.post(
           `${this.$store.state.mainUrl}/members/setAsTechnicalUser?isTechUser=
-            ${this.user.current.technicalUser}&userId=${this.user.current.id}`
+            ${this.user.current.technicalUser}&userId=${this.user.current.id}`,
         )
 
         await this.setToken()

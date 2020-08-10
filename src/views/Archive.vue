@@ -201,7 +201,7 @@
     async created () {
       this.configuration.loading = true
       const response = await this.axios.get(
-        `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+        `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
       )
 
       this.configuration.loading = false
@@ -242,7 +242,7 @@
         this.baseArray[sequenceNumber].loading = true
 
         const array = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`
+          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`,
         )
 
         array.data.sort((a, b) => {
@@ -297,7 +297,7 @@
         filter = filter.substring(0, filter.length - 1)
 
         const configuration = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurations?filter={"where":{${filter}},"order":"version ASC"}`
+          `${this.$store.state.mainUrl}/configurations?filter={"where":{${filter}},"order":"version ASC"}`,
         )
 
         if (configuration.data.length > 0) {
@@ -328,7 +328,7 @@
         filter += `"version":${this.configuration.version.version}`
 
         const configuration = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurations?filter={"where":{${filter}},"order":"version ASC"}`
+          `${this.$store.state.mainUrl}/configurations?filter={"where":{${filter}},"order":"version ASC"}`,
         )
 
         this.configuration.version = null
@@ -345,7 +345,7 @@
 
           if (found === undefined) {
             const details = await this.axios.get(
-              `${this.$store.state.mainUrl}/members/getUserDetails?userId=${configuration.data[0].createdBy}`
+              `${this.$store.state.mainUrl}/members/getUserDetails?userId=${configuration.data[0].createdBy}`,
             )
 
             if (details.data[0] !== null) {
@@ -381,7 +381,7 @@
           ? this.promote.configuration.id : this.promote.configuration.data[0].id
 
         const configuration = await this.axios.post(
-          `${this.$store.state.mainUrl}/configurations/${id}/promote`
+          `${this.$store.state.mainUrl}/configurations/${id}/promote`,
         )
 
         if (this.promote.configuration.data === undefined) {

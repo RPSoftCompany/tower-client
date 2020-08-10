@@ -15,7 +15,12 @@
     "sourceType": "module"
   },
   "rules": {
-    "allowIndentationTabs": 2,
+    "vue/no-parsing-error": [
+      "error",
+      {
+        "unexpected-solidus-in-tag": false
+      }
+    ],
     "max-len": [
       "error",
       {

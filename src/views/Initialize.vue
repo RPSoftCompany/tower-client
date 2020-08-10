@@ -91,7 +91,7 @@
         }
 
         await this.axios.post(
-          `${this.$store.state.mainUrl}/configurations/initialize?secret=${this.encryption.key}`
+          `${this.$store.state.mainUrl}/configurations/initialize?secret=${this.encryption.key}`,
         )
 
         this.$router.push('/login')

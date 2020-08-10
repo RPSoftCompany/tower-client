@@ -168,8 +168,6 @@
 
 <script>
   import rule from '../components/base/rule'
-  import variable from '../components/base/variable'
-  import constantVariable from '../components/base/constantVariable'
   import {
     mdiPlus,
     mdiFormatLetterCase,
@@ -178,11 +176,7 @@
 
   export default {
     name: 'Base',
-    components: {
-      'v-rule': rule,
-      'v-variable': variable,
-      'v-constantVariable': constantVariable,
-    },
+    components: { 'v-rule': rule },
     data: () => ({
       base: null,
       models: null,
@@ -239,7 +233,8 @@
       },
       noDataText () {
         if (this.base !== null && this.modelText !== null) {
-          return `No results matching <strong>${this.modelText}</strong>. Press <kbd>+</kbd> button on the right to create a new ${this.base.name}`
+          return `No results matching <strong>${this.modelText
+          }</strong>. Press <kbd>+</kbd> button on the right to create a new ${this.base.name}`
         } else {
           return 'Type name and press <kbd>+</kbd> button to create new model'
         }
@@ -308,7 +303,7 @@
     },
     async mounted () {
       const roles = await this.axios.get(
-        `${this.$store.state.mainUrl}/members/getUserRoles`
+        `${this.$store.state.mainUrl}/members/getUserRoles`,
       )
 
       this.$store.commit('setUserRoles', roles.data)
@@ -334,13 +329,13 @@
         const baseName = this.$route.params.name
 
         const modelData = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base":"${baseName}"},"order":"name ASC"}`
+          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base":"${baseName}"},"order":"name ASC"}`,
         )
 
         this.models = modelData.data
 
         const base = await this.axios.get(
-          `${this.$store.state.mainUrl}/baseConfigurations?filter={"where":{"name":"${baseName}"},"order":"name ASC"}`
+          `${this.$store.state.mainUrl}/baseConfigurations?filter={"where":{"name":"${baseName}"},"order":"name ASC"}`,
         )
         this.base = base.data[0]
 
@@ -357,7 +352,7 @@
           }
 
           const modelData = await this.axios.get(
-            `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"id":"${data.id}"}}`
+            `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"id":"${data.id}"}}`,
           )
 
           this.currentModel = modelData.data[0]
@@ -373,14 +368,14 @@
             `${
               this.$store.state.mainUrl
             }/baseConfigurations?filter={"where":{"sequenceNumber":"${this.base
-            .sequenceNumber + 1}"}}`
+              .sequenceNumber + 1}"}}`,
           )
 
           if (childBase.data.length > 0) {
             const childBaseName = childBase.data[0].name
 
             const children = await this.axios.get(
-              `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base":"${childBaseName}"}}`
+              `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base":"${childBaseName}"}}`,
             )
 
             if (children !== undefined) {
@@ -438,7 +433,7 @@
             options: {
               hasRestrictions: false,
             },
-          }
+          },
         )
 
         this.models.push(newModel.data)
@@ -456,7 +451,7 @@
             name: data.name,
             value: data.regex,
             error: data.errorMessage,
-          }
+          },
         )
 
         if (rule !== undefined) {
@@ -470,7 +465,7 @@
       async deleteRule (data) {
         const id = data.id
         const rule = await this.axios.delete(
-          `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/rule?ruleId=${id}`
+          `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/rule?ruleId=${id}`,
         )
 
         if (rule !== undefined) {
@@ -487,7 +482,7 @@
             name: data.name,
             value: data.regex,
             error: data.errorMessage,
-          }
+          },
         )
       },
       async addVariable (data) {
@@ -496,7 +491,7 @@
           {
             name: data.name,
             value: data.value,
-          }
+          },
         )
 
         if (variable !== undefined) {
@@ -510,7 +505,7 @@
       async removeVariable (data) {
         const id = data.id
         const variable = await this.axios.delete(
-          `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/variable?variableId=${id}`
+          `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/variable?variableId=${id}`,
         )
 
         if (variable !== undefined) {
@@ -526,7 +521,7 @@
             _id: data.id,
             name: data.name,
             value: data.value,
-          }
+          },
         )
       },
       async modifyOptions (restrictions) {
@@ -534,17 +529,19 @@
           `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/options`,
           {
             hasRestrictions: restrictions,
-          }
+          },
         )
       },
       async modifyRestriction (data) {
         if (data.value === true) {
           await this.axios.post(
-            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/restriction?restriction=${data.item.name}`
+            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id
+            }/restriction?restriction=${data.item.name}`,
           )
         } else {
           await this.axios.delete(
-            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/restriction?restriction=${data.item.name}`
+            `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id
+            }/restriction?restriction=${data.item.name}`,
           )
         }
       },

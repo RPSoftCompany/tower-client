@@ -86,7 +86,7 @@
     methods: {
       async resetData () {
         const response = await this.axios.get(
-          `${this.$store.state.mainUrl}/hooks?filter={"order":"model ASC"}`
+          `${this.$store.state.mainUrl}/hooks?filter={"order":"model ASC"}`,
         )
 
         const modelSet = new Set()
@@ -122,7 +122,7 @@
           {
             url: this.newHookUrl,
             description: '',
-          }
+          },
         )
 
         await this.resetData()
@@ -134,7 +134,7 @@
         const hook = this.hooks[hookName]
 
         await this.axios.delete(
-          `${this.$store.state.mainUrl}/hooks/${id}/hookObject/${hook._id}`
+          `${this.$store.state.mainUrl}/hooks/${id}/hookObject/${hook._id}`,
         )
 
         await this.resetData()
@@ -144,7 +144,7 @@
 
         await this.axios.put(
           `${this.$store.state.mainUrl}/hooks/${id}/hookObject`,
-          hook
+          hook,
         )
 
         await this.resetData()

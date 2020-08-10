@@ -88,14 +88,15 @@
     methods: {
       async resetData () {
         const response = await this.axios.get(
-          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+          `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
         )
 
         this.bases = response.data
 
         response.data.forEach(async base => {
           const modelResponse = await this.axios.get(
-            `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC","where":{"base":"${base.name}"}}`
+            `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC","where":{"base":"${base.name
+            }"}}`,
           )
 
           this.models[base.name] = modelResponse.data
@@ -107,11 +108,13 @@
         this.table.selected = []
 
         const selectedReponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/promotions?filter={"where":{"base":"${base.name}","fromModel":"${item.name}"}}`
+          `${this.$store.state.mainUrl}/promotions?filter={"where":{"base":"${base.name}","fromModel":"${item.name
+          }"}}`,
         )
 
         const itemsResponse = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC","where":{"name":{"neq":"${item.name}"},"base":"${base.name}"}}`
+          `${this.$store.state.mainUrl}/configurationModels?filter={"order":"name ASC","where":{"name":{"neq":"${
+            item.name}"},"base":"${base.name}"}}`,
         )
 
         this.table.items = itemsResponse.data
@@ -142,6 +145,6 @@
 
 <style scoped>
 .halfWidth {
-	width: 50% !important;
+  width: 50% !important;
 }
 </style>

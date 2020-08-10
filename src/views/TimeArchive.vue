@@ -97,9 +97,9 @@
       <v-autocomplete
         v-for="base of baseArray"
         ref="base"
-        :loading="loading"
         :key="base.name"
         v-model="values[base.sequenceNumber]"
+        :loading="loading"
         :disabled="configuration.items.length > 3"
         :prepend-icon="base.icon"
         :label="base.name"
@@ -229,7 +229,7 @@
     },
     async created () {
       const response = await this.axios.get(
-        `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`
+        `${this.$store.state.mainUrl}/baseConfigurations?filter={"order":"sequenceNumber ASC"}`,
       )
 
       this.baseArray = response.data
@@ -245,7 +245,7 @@
     methods: {
       async getArrayFromBase (base, sequenceNumber) {
         const array = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`
+          `${this.$store.state.mainUrl}/configurationModels?filter={"where":{"base": "${base}"}}`,
         )
 
         array.data.sort((a, b) => {
@@ -315,7 +315,7 @@
         const d = new Date(`${date}T${time}`)
 
         const configuration = await this.axios.get(
-          `${this.$store.state.mainUrl}/configurations/findByDate?filter={${filter}}&date=${d.toUTCString()}`
+          `${this.$store.state.mainUrl}/configurations/findByDate?filter={${filter}}&date=${d.toUTCString()}`,
         )
 
         if (configuration.data.effectiveDate === undefined) {
@@ -324,7 +324,7 @@
           return true
         } else {
           const details = await this.axios.get(
-            `${this.$store.state.mainUrl}/members/getUserDetails?userId=${configuration.data.createdBy}`
+            `${this.$store.state.mainUrl}/members/getUserDetails?userId=${configuration.data.createdBy}`,
           )
 
           if (details.data[0] !== null) {

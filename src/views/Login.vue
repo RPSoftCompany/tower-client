@@ -174,7 +174,7 @@
             },
             {
               timeout: 10000,
-            }
+            },
           )
 
           if (user !== undefined) {
@@ -183,7 +183,7 @@
             this.$store.commit('setUserData', user.data)
 
             const roles = await this.axios.get(
-              `${this.$store.state.mainUrl}/members/getUserRoles`
+              `${this.$store.state.mainUrl}/members/getUserRoles`,
             )
 
             this.$store.commit('setUserRoles', roles.data)
