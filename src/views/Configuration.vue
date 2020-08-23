@@ -135,13 +135,28 @@
         />
         <v-spacer />
         <v-tooltip
+          v-if="configuration.items.length > 0 && configuration.editMode"
+          bottom
+        >
+          <template v-slot:activator="{ on }">
+            <v-icon
+              style="max-height: 36px;"
+              class="mr-3 mt-2"
+              @click="importDialog.show = true"
+              v-on="on"
+              v-text="icons.mdiFileUpload"
+            />
+          </template>
+          <span>Import configuration from file</span>
+        </v-tooltip>
+        <v-tooltip
           v-if="promoted.length > 0"
           bottom
         >
           <template v-slot:activator="{ on }">
             <v-icon
               style="max-height: 36px;"
-              class="mr-3"
+              class="mr-3 mt-2"
               @click="showPromotionDialog"
               v-on="on"
               v-text="icons.mdiPackageUp"
@@ -156,7 +171,7 @@
           <template v-slot:activator="{ on }">
             <v-icon
               :disabled="configuration.editModeDisabled"
-              class="mr-3"
+              class="mr-3 mt-2"
               v-on="on"
               @click="changeEditMode"
               v-text="
@@ -325,6 +340,65 @@
       </div>
     </v-card>
     <v-dialog
+      v-model="importDialog.show"
+      max-width="500px"
+    >
+      <v-card>
+        <v-card-title class="primary">
+          Import configuration from file
+        </v-card-title>
+        <v-card-text>
+          <v-file-input
+            v-model="importDialog.file"
+            label="File input"
+            show-size
+            @change="onImportFileChange"
+          />
+          <v-radio-group
+            v-model="importDialog.type"
+            :disabled="importDialog.file === null"
+          >
+            <v-radio
+              label="plain text"
+              value="text/plain"
+            />
+            <v-radio
+              label="JSON"
+              value="application/json"
+            />
+            <v-radio
+              label="CSV"
+              value="text/csv"
+            />
+          </v-radio-group>
+          <v-combobox
+            v-if="importDialog.type==='text/csv'"
+            v-model="importDialog.separator"
+            return-object
+            :items="importDialog.separators"
+            label="Separator"
+          />
+        </v-card-text>
+        <v-card-actions class="mx-3 mb-3">
+          <v-btn
+            text
+            @click="closeImportDialog"
+          >
+            Cancel
+          </v-btn>
+          <v-spacer />
+          <v-btn
+            color="primary"
+            text
+            :disabled="importDialog.file === null"
+            @click="onImportButtonClicked"
+          >
+            Import
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
       v-model="promotionDialog.show"
       max-width="80%"
     >
@@ -363,7 +437,7 @@
   import {
     mdiFormatLetterCaseLower, mdiFormatLetterCase, mdiPackageUp,
     mdiSquareEditOutline, mdiPencil, mdiChevronLeft, mdiChevronRight,
-    mdiDownload,
+    mdiDownload, mdiFileUpload,
   } from '@mdi/js'
 
   export default {
@@ -382,6 +456,17 @@
       baseRules: [],
 
       promoted: [],
+
+      importDialog: {
+        show: false,
+        file: null,
+        type: 'text/plain',
+        separator: { text: 'Semicolon (;)', value: ';' },
+        separators: [{ text: 'Semicolon (;)', value: ';' },
+                     { text: 'Comma (,)', value: ',' },
+                     { text: 'Tab (    )', value: '\t' },
+                     { text: 'Space ( )', value: ' ' }],
+      },
 
       promotionDialog: {
         show: false,
@@ -403,6 +488,7 @@
         mdiChevronLeft,
         mdiChevronRight,
         mdiDownload,
+        mdiFileUpload,
       },
 
       configuration: {
@@ -1409,6 +1495,131 @@
 
         await this.axios.post(`${this.$store.state.mainUrl}/constantVariables`, post)
       },
+      async onImportFileChange (file) {
+        if (file !== null && file !== undefined) {
+          if (file.type === 'text/plain' || file.type === 'application/json' || file.type === 'text/csv') {
+            this.importDialog.type = file.type
+          }
+        }
+      },
+      async onImportButtonClicked () {
+        if (this.importDialog.file !== null && this.importDialog.file !== undefined) {
+          const text = await this.importDialog.file.text()
+          if (this.importDialog.type === 'text/csv') {
+            this.importCSV(text, this.importDialog.separator.value)
+          } else if (this.importDialog.type === 'text/plain') {
+            this.importCSV(text, '=')
+          } else {
+            this.importJSON(text)
+          }
+        }
+      },
+      importJSON (text) {
+        try {
+          const obj = JSON.parse(text)
+
+          const keys = Object.getOwnPropertyNames(obj)
+          const importedMap = new Map()
+
+          keys.forEach(key => {
+            importedMap.set(key, obj[key])
+          })
+
+          const newArray = []
+          let newVersions = []
+          if (this.configuration.backupItems.length > 0) {
+            newVersions = new Array(this.configuration.backupItems[0].versions.length)
+          }
+          importedMap.forEach((value, key) => {
+            const found = this.configuration.backupItems.find(el => {
+              return el.name === key
+            })
+            if (found !== undefined) {
+              found.value = value
+              newArray.push(found)
+            } else {
+              let type = 'string'
+              if (typeof value === 'boolean') {
+                type = 'boolean'
+              } else if (typeof value === 'number') {
+                type = 'number'
+              }
+
+              newArray.push({
+                addIfAbsent: false,
+                forced: false,
+                type: type,
+                name: key,
+                value: value,
+                versions: newVersions,
+                visible: true,
+              })
+            }
+          })
+
+          this.configuration.backupItems = newArray
+          this.configuration.items = []
+          this.slowlyAddItems(0)
+
+          this.closeImportDialog()
+        } catch (e) {
+          this.closeImportDialog()
+          this.$store.commit('setError', 'Invalid JSON file')
+        }
+      },
+      importCSV (text, separator) {
+        const splited = text.split('\n')
+        const importedMap = new Map()
+
+        splited.forEach(line => {
+          if (line.includes(separator)) {
+            const split = line.split(separator)
+            const name = split[0]
+            const value = split[1]
+
+            if (name !== undefined && value !== undefined) {
+              console.log(`${name}:${value}`)
+              importedMap.set(name, value)
+            }
+          }
+        })
+
+        if (importedMap.size > 0) {
+          const newArray = []
+          importedMap.forEach((value, key) => {
+            const found = this.configuration.backupItems.find(el => {
+              return el.name === name
+            })
+            if (found !== undefined) {
+              found.value = value
+              newArray.push(found)
+            } else {
+              newArray.push({
+                addIfAbsent: false,
+                forced: false,
+                type: 'string',
+                name: key,
+                value: value,
+                versions: [],
+                visible: true,
+              })
+            }
+          })
+
+          this.configuration.backupItems = newArray
+          this.configuration.items = []
+          this.closeImportDialog()
+          this.slowlyAddItems(0)
+        } else {
+          this.closeImportDialog()
+          this.$store.commit('setError', `Given file has no lines with '${separator}' separator`)
+        }
+      },
+      closeImportDialog () {
+        this.importDialog.show = false
+        this.importDialog.file = null
+        this.importDialog.type = 'text/plain'
+      },
     },
   }
 </script>
@@ -1449,7 +1660,7 @@
 }
 
 .configRow_different {
-  background: #f2a52a69;
+  background: rgba(242, 165, 42, 0.45);
   transition: all 0.3s;
 }
 

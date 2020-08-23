@@ -125,7 +125,7 @@
         default: null,
       },
       value: {
-        type: [String, Boolean],
+        type: [String, Boolean, Number],
         default: null,
       },
       type: {

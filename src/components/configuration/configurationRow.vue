@@ -174,7 +174,7 @@
         default: function () { return [] },
       },
       value: {
-        type: [String, Boolean],
+        type: [String, Boolean, Number],
         default: '',
       },
       type: {
