@@ -1271,7 +1271,7 @@
               }
             }
           } else {
-            this.configuration.items = Object.freeze(this.configuration.items.concat(slice))
+            this.configuration.items = this.configuration.items.concat(slice)
             this.slowlyAddItems(++i)
           }
         }, 5)
