@@ -222,8 +222,8 @@
       },
       async onTechnicalChange () {
         await this.axios.post(
-          `${this.$store.state.mainUrl}/members/setAsTechnicalUser?isTechUser=
-            ${this.user.current.technicalUser}&userId=${this.user.current.id}`,
+          `${this.$store.state.mainUrl}/members/setAsTechnicalUser?isTechUser=${
+            this.user.current.technicalUser}&userId=${this.user.current.id}`,
         )
 
         await this.setToken()

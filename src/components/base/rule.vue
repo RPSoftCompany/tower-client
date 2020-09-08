@@ -31,6 +31,7 @@
       v-model="regex"
       :disabled="!editable"
       :rules="currentRules"
+      placeholder="^[A-Za-z]+$"
       label="Regular expression"
       prefix="/"
       suffix="/"

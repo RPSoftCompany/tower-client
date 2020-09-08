@@ -260,7 +260,7 @@
           Success
         </v-card-title>
         <v-card-text class="mt-5">
-          Connection established
+          Connection established successfully
         </v-card-text>
         <v-divider />
         <v-card-actions>
@@ -300,7 +300,7 @@
 
         rules: {
           validateUrl: value =>
-            /^ldap:\/\/.+/.test(value) ||
+            /^ldap[s]*:\/\/.+/.test(value) ||
             value === '' ||
             "Invalid URL, eg. 'ldap://localhost:389'",
           required: value => !!value || 'Required.',
@@ -432,7 +432,7 @@
         )
       },
       async updateLdap () {
-        if (this.checkIfLdapValuesFilled() && this.$refs.ldapForm.validate()) {
+        if (this.$refs.ldapForm.validate() && this.checkIfLdapValuesFilled()) {
           await this.axios.patch(
             `${this.$store.state.mainUrl}/connections`,
             {

@@ -43,8 +43,9 @@
           :style="
             versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
           "
-          :class="{ configRow_draft : draft, 'font-weight-light': draft, 'font-italic': draft}"
-          class="px-2 text-center configRow_history configRow_pre"
+          :class="{ configRow_draft : draft, 'font-weight-light': draft, 'font-italic': draft,
+                    configRow_pre : local_type !== 'list'}"
+          class="px-2 text-center configRow_history"
           v-text="
             local_type === 'password' && pass_locked
               ? '••••••••'
@@ -115,6 +116,25 @@
           @input="change"
           @click:append="pass_locked = !pass_locked"
         />
+        <v-combobox
+          v-if="local_type === 'list'"
+          v-model="local_value"
+          :style="
+            versions.length > 0 || deleted ? 'min-width:33.33%' : 'min-width:50%'
+          "
+          class="px-2 mt-4 configRow_field"
+          :rules="local_rules"
+          :readonly="forced_value"
+          :hint="force_cause"
+          dense
+          label="List"
+          multiple
+          chips
+          deletable-chips
+          append-icon
+          persistent-hint
+          @change="change"
+        />
         <div
           v-if="local_type === 'boolean'"
           :style="
@@ -174,7 +194,7 @@
         default: function () { return [] },
       },
       value: {
-        type: [String, Boolean, Number],
+        type: [String, Boolean, Number, Array],
         default: '',
       },
       type: {
@@ -238,26 +258,32 @@
       },
       different () {
         if (this.deleted) {
-          if (this.local_type !== 'boolean') {
-            return this.local_value
-          } else {
-            if (this.local_value === true) {
-              return 'true'
-            } else {
-              return 'false'
-            }
-          }
+          return this.local_value
         }
 
-        if (this.local_type !== 'boolean') {
-          return this.versions[this.current_version] !== this.local_value
-        } else {
-          if (this.local_value === true) {
-            return this.versions[this.current_version] !== 'true'
-          } else {
-            return this.versions[this.current_version] !== 'false'
+        if (this.local_type === 'list') {
+          let diff = false
+          if (this.versions[this.current_version] === undefined) {
+            return true
+          } else if (this.versions[this.current_version].length !== this.local_value.length) {
+            return true
           }
+
+          this.local_value.forEach((el, i) => {
+            if (this.versions[this.current_version] === undefined ||
+              this.versions[this.current_version][i] === undefined) {
+              diff = true
+              return
+            }
+            if (el !== this.versions[this.current_version][i]) {
+              diff = true
+            }
+          })
+
+          return diff
         }
+
+        return this.versions[this.current_version] !== this.local_value
       },
     },
     watch: {
@@ -289,8 +315,17 @@
       },
       createLocalRules () {
         this.rules.forEach(rule => {
-          const regex = new RegExp(rule.value)
-          this.local_rules.push(v => regex.test(v) || rule.error)
+          if (rule.conditionType === 'value' && rule.conditionRegEx) {
+            const regex = new RegExp(rule.conditionValue)
+            this.local_rules.push(v => regex.test(v) || rule.error)
+          } else if (rule.conditionType === 'value' && !rule.conditionRegEx) {
+            this.local_rules.push(v => v === rule.conditionValue || rule.error)
+          } else if (rule.conditionType === 'type' && rule.conditionRegEx) {
+            const regex = new RegExp(rule.conditionValue)
+            this.local_rules.push(() => regex.test(this.local_type) || rule.error)
+          } else if (rule.conditionType === 'type' && !rule.conditionRegEx) {
+            this.local_rules.push(() => this.local_type === rule.conditionValue || rule.error)
+          }
         })
       },
       valid () {

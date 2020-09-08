@@ -135,7 +135,6 @@
         />
         <v-spacer />
         <v-tooltip
-          v-if="configuration.items.length > 0 && configuration.editMode"
           bottom
         >
           <template v-slot:activator="{ on }">
@@ -265,10 +264,13 @@
         >
           <newConfigurationRow
             v-for="item of editModeItems"
+            ref="newConfigRows"
             :key="item.name"
             :name="item.name"
             :value="item.value"
             :type="item.type"
+            :rules="item.rules"
+            :all-type-rules="typeRules"
             :added="true"
             :visible="item.visible"
             @change_row="changeConfigurationRow"
@@ -454,6 +456,7 @@
       arrayOfArrays: [],
       defaultValues: {},
       baseRules: [],
+      typeRules: [],
 
       promoted: [],
 
@@ -543,15 +546,21 @@
         }
 
         this.configuration.items.forEach(variable => {
-          if (variable.type === 'boolean') {
-            if (variable.value === true || variable.value === 'true') {
-              if (variable.versions[maxVersion] !== 'true') {
-                isDifferent = true
-              }
-            } else if (variable.value === false || variable.value === 'false') {
-              if (variable.versions[maxVersion] !== 'false') {
-                isDifferent = true
-              }
+          if (variable.type === 'list') {
+            if (variable.versions[maxVersion] === undefined) {
+              isDifferent = true
+            } else if (variable.versions[maxVersion].length !== variable.value.length) {
+              isDifferent = true
+            } else {
+              variable.value.forEach((el, i) => {
+                if (variable.versions[maxVersion][i] === undefined) {
+                  isDifferent = true
+                } else {
+                  if (variable.versions[maxVersion][i] !== el) {
+                    isDifferent = true
+                  }
+                }
+              })
             }
           } else {
             if (variable.value !== variable.versions[maxVersion]) {
@@ -580,15 +589,21 @@
         let isDifferent = false
 
         this.configuration.items.forEach(variable => {
-          if (variable.type === 'boolean') {
-            if (variable.value === true || variable.value === 'true') {
-              if (variable.versions[currVersion] !== 'true') {
-                isDifferent = true
-              }
-            } else if (variable.value === false || variable.value === 'false') {
-              if (variable.versions[currVersion] !== 'false') {
-                isDifferent = true
-              }
+          if (variable.type === 'list') {
+            if (variable.versions[currVersion] === undefined) {
+              isDifferent = true
+            } else if (variable.versions[currVersion].length !== variable.value.length) {
+              isDifferent = true
+            } else {
+              variable.value.forEach((el, i) => {
+                if (variable.versions[currVersion][i] === undefined) {
+                  isDifferent = true
+                } else {
+                  if (variable.versions[currVersion][i] !== el) {
+                    isDifferent = true
+                  }
+                }
+              })
             }
           } else {
             if (variable.value !== variable.versions[currVersion]) {
@@ -863,32 +878,34 @@
               }
             })
 
+            const lastItem = array[array.length - 1]
+
             const varMap = new Map()
 
-            array.forEach((el, i) => {
-              el.variables.forEach(variable => {
-                if (varMap.has(variable.name)) {
-                  const prop = varMap.get(variable.name)
-                  prop.history[i] = { value: variable.value, type: variable.type }
-                  prop.value = variable.value
-                  prop.type = variable.type
-                  prop.forced = variable.forced
-                  prop.addIfAbsent = variable.addIfAbsent
-                  varMap.set(variable.name, prop)
-                } else {
-                  const prop = {
-                    name: variable.name,
-                    value: variable.value,
-                    type: variable.type,
-                    forced: variable.forced,
-                    addIfAbsent: variable.addIfAbsent,
-                    history: [],
-                  }
-
-                  varMap.set(variable.name, prop)
+            // lastItem.forEach((el, i) => {
+            lastItem.variables.forEach(variable => {
+              if (varMap.has(variable.name)) {
+                const prop = varMap.get(variable.name)
+                prop.history[array.length - 1] = { value: variable.value, type: variable.type }
+                prop.value = variable.value
+                prop.type = variable.type
+                prop.forced = variable.forced
+                prop.addIfAbsent = variable.addIfAbsent
+                varMap.set(variable.name, prop)
+              } else {
+                const prop = {
+                  name: variable.name,
+                  value: variable.value,
+                  type: variable.type,
+                  forced: variable.forced,
+                  addIfAbsent: variable.addIfAbsent,
+                  history: [],
                 }
-              })
+
+                varMap.set(variable.name, prop)
+              }
             })
+            // })
 
             this.constantVariables.items = [...varMap.values()]
           }
@@ -1058,48 +1075,37 @@
 
           this.defaultValues = {}
           this.baseRules = []
+          this.typeRules = []
 
           this.values.forEach(base => {
-            // base.defaultValues.forEach(defaultValue => {
-            //   this.defaultValues[defaultValue.name] = {
-            //     value: defaultValue.value,
-            //     cause: `Value forced by ${base.base}`,
-            //   }
-            // })
-
             base.rules.forEach(baseRule => {
               this.baseRules.push(baseRule)
+              if (baseRule.targetType === 'type') {
+                this.typeRules.push(baseRule)
+              }
             })
 
             if (base.rules !== undefined) {
               base.rules.forEach(rule => {
-                const index = currentVariables.findIndex(variable => {
-                  return variable.name === rule.name
+                const found = currentVariables.filter(variable => {
+                  if (rule.targetRegEx) {
+                    return new RegExp(rule.targetValue).test(variable[rule.targetType])
+                  } else {
+                    return variable[rule.targetType].includes(rule.targetValue)
+                  }
                 })
 
-                if (index !== -1) {
-                  if (currentVariables[index].rules === undefined) {
-                    currentVariables[index].rules = []
-                  }
-                  currentVariables[index].rules.push(rule)
+                if (found.length > 0) {
+                  found.map(el => {
+                    if (el.rules === undefined) {
+                      el.rules = []
+                    }
+
+                    el.rules.push(rule)
+                  })
                 }
               })
             }
-            // if (base.defaultValues !== undefined) {
-            //   base.defaultValues.forEach(value => {
-            //     const index = currentVariables.findIndex(variable => {
-            //       return variable.name === value.name
-            //     })
-
-            //     if (index !== -1) {
-            //       currentVariables[index].forced_value = true
-            //       currentVariables[index].value = value.value
-            //       currentVariables[
-            //         index
-            //       ].force_cause = `Value forced by ${base.base}`
-            //     }
-            //   })
-            // }
           })
 
           const where = {}
@@ -1269,20 +1275,16 @@
               for (const row of this.$refs.configRows) {
                 row.valid()
               }
+            } else {
+              for (const row of this.$refs.newConfigRows) {
+                row.valid()
+              }
             }
           } else {
             this.configuration.items = this.configuration.items.concat(slice)
             this.slowlyAddItems(++i)
           }
         }, 5)
-
-        // this.configuration.items = Object.freeze([...this.configuration.backupItems])
-        // this.configuration.editModeDisabled = false
-        // this.$nextTick(() => {
-        //   for (const row of this.$refs.configRows) {
-        //     row.valid()
-        //   }
-        // })
       },
       changeConfigurationRow (data) {
         this.configuration.items.map(el => {
@@ -1526,7 +1528,7 @@
           })
 
           const newArray = []
-          let newVersions = []
+          let newVersions = new Array(this.configuration.maxVersion)
           if (this.configuration.backupItems.length > 0) {
             newVersions = new Array(this.configuration.backupItems[0].versions.length)
           }
@@ -1578,7 +1580,6 @@
             const value = split[1]
 
             if (name !== undefined && value !== undefined) {
-              console.log(`${name}:${value}`)
               importedMap.set(name, value)
             }
           }
@@ -1600,7 +1601,7 @@
                 type: 'string',
                 name: key,
                 value: value,
-                versions: [],
+                versions: new Array(this.configuration.maxVersion),
                 visible: true,
               })
             }

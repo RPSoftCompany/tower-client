@@ -53,7 +53,7 @@
             >
               <v-row align="center">
                 <v-col
-                  class="d-flex"
+                  class="d-flex pb-0"
                   cols="6"
                 >
                   <v-text-field
@@ -65,7 +65,7 @@
                   />
                 </v-col>
                 <v-col
-                  class="d-flex"
+                  class="d-flex pb-0"
                   cols="3"
                   offset="3"
                 >
@@ -77,14 +77,35 @@
                   />
                 </v-col>
                 <v-col
-                  class="d-flex"
+                  class="py-0"
                   cols="12"
                 >
-                  <editor-content
-                    :ref="`divTextArea_${i}`"
-                    :native-extensions="nativeExtensions"
-                    :editor="createEditor(i)"
-                    class="editor__content"
+                  <prism-editor
+                    v-if="item.returnType === 'plain text'"
+                    v-model="items[i].template"
+                    class="prismeditor"
+                    language="markup"
+                    :highlight="highlighter"
+                    line-numbers
+                    @blur="saveConfig(i)"
+                  />
+                  <prism-editor
+                    v-if="item.returnType === 'json'"
+                    v-model="items[i].template"
+                    class="prismeditor"
+                    language="json"
+                    :highlight="highlighterJson"
+                    line-numbers
+                    @blur="saveConfig(i)"
+                  />
+                  <prism-editor
+                    v-if="item.returnType === 'xml'"
+                    v-model="items[i].template"
+                    class="prismeditor"
+                    language="xml"
+                    :highlight="highlighterXml"
+                    line-numbers
+                    @blur="saveConfig(i)"
                   />
                 </v-col>
               </v-row>
@@ -122,17 +143,21 @@
   import draggable from 'vuedraggable'
   import { mdiDotsVertical, mdiPlus } from '@mdi/js'
 
-  import { Editor, EditorContent, Extension } from 'tiptap'
-  import {
-    CodeBlockHighlight,
-    History,
-  } from 'tiptap-extensions'
+  import { PrismEditor } from 'vue-prism-editor'
+  import 'vue-prism-editor/dist/prismeditor.min.css'
+  import { highlight, languages } from 'prismjs/components/prism-core'
+  import 'prismjs/components/prism-clike'
+  import 'prismjs/components/prism-markup'
+  import 'prismjs/components/prism-json'
+  import 'prismjs/components/prism-xml-doc'
+  import 'prismjs/components/prism-css'
+  import 'prismjs/themes/prism-coy.css'
 
   export default {
     name: 'RestSettings',
     components: {
       draggable,
-      EditorContent,
+      'prism-editor': PrismEditor,
     },
     data: props => ({
       panel: null,
@@ -155,24 +180,7 @@
       },
 
       newRowValid: true,
-
-      hljs: require('highlight.js/lib/highlight.js'),
-      tower: require('../highlight/tower_highlight.js'),
       registred: false,
-
-      nativeExtensions: new class extends Extension {
-        keys () {
-          return {
-            Tab (state, dispatch, view) {
-              const transaction = state.tr.insertText('\t')
-              view.dispatch(transaction)
-              return true
-            },
-          }
-        }
-      }(),
-
-      editors: [],
     }),
     computed: {
       addDisabled () {
@@ -191,6 +199,35 @@
       this.resetData()
     },
     methods: {
+      highlighter (code) {
+        return highlight(
+          code,
+          {
+            ...languages.markup,
+          },
+          'markup',
+        )
+      },
+      highlighterJson (code) {
+        return highlight(
+          code,
+          {
+            ...languages.markup,
+            ...languages.json,
+          },
+          'markup',
+        )
+      },
+      highlighterXml (code) {
+        return highlight(
+          code,
+          {
+            ...languages.markup,
+            ...languages.xml,
+          },
+          'markup',
+        )
+      },
       async resetData () {
         const response = await this.axios.get(
           `${this.$store.state.mainUrl}/restConfigurations?filter={"order":"sequenceNumber ASC"}`,
@@ -203,56 +240,6 @@
         )
 
         this.bases = responseBase.data
-      },
-      onFocus (i) {
-        if (!this.registred) {
-          this.hljs.registerLanguage('tower', this.tower)
-        }
-      },
-      createEditor (i) {
-        let editor = this.editors[i]
-        if (editor === undefined) {
-          if (i >= 0) {
-            editor = new Editor({
-              extensions: [
-                new History(),
-                new CodeBlockHighlight({
-                  languages: {
-                    tower: this.tower,
-                  },
-                }),
-                this.nativeExtensions,
-              ],
-              onUpdate: this.onUpdate,
-              onBlur: this.onBlur,
-              content: `<pre><code>${this.items[i].template}</code></pre>`,
-            })
-
-            this.editors[i] = editor
-          }
-        }
-        return editor
-      },
-      onBlur () {
-        this.saveConfig(this.panel)
-      },
-      onUpdate (editor) {
-        if (editor.getJSON().content[0].content !== undefined) {
-          if (editor.getJSON().content.length > 1) {
-            this.items[this.panel].template = ''
-            editor.getJSON().content.forEach(el => {
-              this.items[this.panel].template += el.content[0].text
-              this.items[this.panel].template += '\n'
-            })
-
-            this.$refs[`divTextArea_${this.panel}`][0].editor
-              .setContent(`<pre><code>${this.items[this.panel].template}</code></pre>`)
-          } else {
-            this.items[this.panel].template = editor.getJSON().content[0].content[0].text
-          }
-        } else {
-          this.items[this.panel].template = ''
-        }
       },
       validateUrl (value) {
         if (value === '' || value === null) {
@@ -342,80 +329,17 @@
 </style>
 
 <style lang="scss">
-.editor__content {
-  width: 100%;
-}
-.editor__content > div > pre > code {
-  padding-left: 5px;
-  background-color: #FFF;
-  font-size: 100%;
-  font-weight: 500;
-  width: 100%;
-  color: rgba(0,0,0,0.87)
-}
-
-.ProseMirror-focused {
-  border-radius: 0px !important;
+.prism-editor__textarea:focus {
   outline: none;
 }
-
-code:before {
-  content: none !important;
-}
-
-pre:focus {
-    outline: 0px solid transparent;
-}
-.hljs-comment,
-.hljs-quote {
-  color: #999999;
-}
-.hljs-variable,
-.hljs-template-variable,
-.hljs-attribute,
-.hljs-tag,
-.hljs-name,
-.hljs-regexp,
-.hljs-link,
-.hljs-name,
-.hljs-selector-id,
-.hljs-selector-class {
-  color: #f3696b;
-}
-.hljs-number,
-.hljs-meta,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-literal,
-.hljs-type,
-.hljs-regexEqual,
-.hljs-params {
-  color: #f99157;
-}
-.hljs-string,
-.hljs-symbol,
-.hljs-bullet {
-  color: #74c974;
-}
-.hljs-title,
-.hljs-section {
-  color: #fac356;
-}
-.hljs-forEach,
-.hljs-variables,
-.hljs-of,
-.hljs-if,
-.hljs-in,
-.hljs-end,
-.hljs-else,
-.hljs-keyword,
-.hljs-selector-tag {
-  color: #5a94ce;
-}
-.hljs-emphasis {
-  font-style: italic;
-}
-.hljs-strong {
-  font-weight: 700;
+.prismeditor {
+  font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  border: solid;
+  border-color: rgba(211, 211, 211, 0.5);
+  border-width: 1px;
+  background: repeating-linear-gradient(rgba(69, 142, 209, 0.04), rgba(69, 142, 209, 0.04) 21px,
+    rgba(0, 0, 0, 0) 21px, rgba(0, 0, 0, 0) 42px);
 }
 </style>

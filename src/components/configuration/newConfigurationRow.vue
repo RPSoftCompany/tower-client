@@ -28,19 +28,18 @@
         <v-text-field
           ref="configName"
           v-model="local_name"
-          :rules="[rules.required]"
+          :rules="[local_rules.required, ...nameRules]"
           :disabled="local_added"
-          :error-messages="errorMessage"
           class="pr-3 pl-4 newConfigRow_thirdWidth"
           autocomplete="off"
           label="name"
-          @input="removeErrorMessage"
         />
         <v-select
           v-model="local_type"
           :items="local_types"
           label="Type"
           class="newConfigRow_thirdWidth"
+          :rules="typeRules"
           autocomplete="off"
           @input="changed"
         />
@@ -103,6 +102,18 @@
           type="number"
           @input="changed"
         />
+        <v-combobox
+          v-if="local_type === 'list'"
+          v-model="local_value"
+          style="margin-top: 8px;"
+          class="px-2 newConfigRow_thirdWidth"
+          dense
+          label="List"
+          multiple
+          chips
+          deletable-chips
+          append-icon
+        />
         <v-icon
           class="newConfigRow_addRemoveIcon mr-3 mt-3 pb-0"
 
@@ -125,7 +136,7 @@
         default: null,
       },
       value: {
-        type: [String, Boolean, Number],
+        type: [String, Boolean, Number, Array],
         default: null,
       },
       type: {
@@ -144,6 +155,16 @@
         type: Boolean,
         default: true,
       },
+      rules: {
+        type: Array,
+        default: () => { return [] },
+        required: false,
+      },
+      allTypeRules: {
+        type: Array,
+        default: () => { return [] },
+        required: false,
+      },
     },
     data: attrs => ({
       icons: {
@@ -156,21 +177,75 @@
       local_value: attrs.value,
       local_type: attrs.type,
       local_added: attrs.added,
-      local_types: ['string', 'number', 'password', 'boolean', 'text', 'Vault'],
+      local_types: ['string', 'number', 'password', 'boolean', 'text', 'list', 'Vault'],
+
+      typeRules: [],
+      nameRules: [],
 
       errorMessage: undefined,
       pass_locked: true,
 
-      rules: {
+      local_rules: {
         required: value => !!value || 'Required',
       },
     }),
     watch: {
-      local_type (actual) {
+      local_type (actual, prev) {
         if (actual === 'boolean') {
           this.local_value = false
+        } else if (actual === 'list') {
+          this.local_value = null
         }
+
+        if (prev === 'list') {
+          this.local_value = null
+        }
+
+        this.typeRules = []
+        this.allTypeRules.forEach(rule => {
+          if (rule.targetRegEx) {
+            const regex = new RegExp(rule.targetValue)
+            if (regex.test(actual)) {
+              if (rule.conditionRegEx) {
+                const conregex = new RegExp(rule.conditionValue)
+                this.typeRules.push(v => conregex.test(v) || rule.error)
+              } else {
+                this.typeRules.push(v => v === rule.conditionValue || rule.error)
+              }
+            }
+          } else {
+            if (rule.targetValue === actual) {
+              if (rule.conditionRegEx) {
+                const conregex = new RegExp(rule.conditionValue)
+                this.typeRules.push(v => conregex.test(v) || rule.error)
+              } else {
+                this.typeRules.push(v => v === rule.conditionValue || rule.error)
+              }
+            }
+          }
+        })
       },
+    },
+    mounted () {
+      if (this.rules.length > 0) {
+        this.rules.forEach(rule => {
+          if (rule.conditionType === 'type') {
+            if (rule.conditionRegEx) {
+              const regex = new RegExp(rule.conditionValue)
+              this.typeRules.push(v => regex.test(v) || rule.error)
+            } else {
+              this.typeRules.push(v => v === rule.conditionValue || rule.error)
+            }
+          } else if (rule.conditionType === 'name') {
+            if (rule.conditionRegEx) {
+              const regex = new RegExp(rule.conditionValue)
+              this.nameRules.push(v => regex.test(v) || rule.error)
+            } else {
+              this.nameRules.push(v => v === rule.conditionValue || rule.error)
+            }
+          }
+        })
+      }
     },
     methods: {
       focus () {
@@ -211,6 +286,15 @@
       removeErrorMessage () {
         this.errorMessage = undefined
       },
+      valid () {
+        return this.$refs.newConfigForm.validate()
+      },
     },
   }
 </script>
+
+<style scoped>
+.v-chip__content {
+
+}
+</style>

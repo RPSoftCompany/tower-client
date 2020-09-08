@@ -16,6 +16,43 @@
 
 <template>
   <div>
+    <v-dialog
+      v-model="deleteDialog.show"
+      width="500"
+    >
+      <v-card>
+        <v-card-title class="headline red">
+          Delete
+        </v-card-title>
+
+        <v-card-text
+          v-if="currentModel !== null"
+          class="mt-3"
+        >
+          Are you sure you want to delete {{ currentModel.name }} {{ base.name }}?
+        </v-card-text>
+
+        <v-divider />
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            text
+            @click="deleteDialog.show = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="red"
+            text
+            @loading="deleteDialog.loading"
+            @click="deleteModel"
+          >
+            Yes
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <div class="d-flex justify-center">
       <div class="halfWidth">
         <v-autocomplete
@@ -26,13 +63,13 @@
           :loading="loading"
           :prepend-icon="baseIcon"
           :items="models"
-          :append-outer-icon="canAddBase ? icons.mdiPlus : undefined"
+          :append-outer-icon="appendIcon"
           autocomplete="off"
           item-text="name"
           return-object
           clearable
           @change="modelChanged"
-          @click:append-outer="addModel"
+          @click:append-outer="addOrDeleteModel"
         >
           <template slot="no-data">
             <div
@@ -83,25 +120,34 @@
                 class="px-4"
                 @click:append="rules.caseSensitive = !rules.caseSensitive"
               />
+              <v-divider />
               <transition-group
                 name="fade-transition"
                 duration="100"
                 mode="out-in"
                 tag="form"
               >
-                <v-rule
+                <div
                   v-for="rule of rulesList"
                   :key="rule._id"
-                  :rule_name="rule.name"
-                  :new_rule="false"
-                  :rule_regex="rule.value"
-                  :rule_error="rule.error"
-                  :rule_id="rule._id"
-                  :editable="isEditable"
-                  @delete_rule="deleteRule"
-                  @modify_rule="modifyRule"
-                />
+                >
+                  <v-rule
+                    :target-value="rule.targetValue"
+                    :target-type="rule.targetType"
+                    :target-reg-ex="rule.targetRegEx"
+                    :new-rule="false"
+                    :condition-value="rule.conditionValue"
+                    :condition-type="rule.conditionType"
+                    :condition-reg-ex="rule.conditionRegEx"
+                    :error-message="rule.error"
+                    :rule-id="rule._id"
+                    :editable="isEditable"
+                    @delete_rule="deleteRule"
+                    @modify_rule="modifyRule"
+                  />
+                </div>
               </transition-group>
+              <v-divider />
               <v-rule
                 ref="newRule"
                 :editable="isEditable"
@@ -115,7 +161,7 @@
                 v-model="restrictions.hasRestrictions"
                 :disabled="!isEditable"
                 color="primary"
-                label="Allow restrictions"
+                label="Enable restrictions"
                 class="px-4"
                 @change="modifyOptions"
               />
@@ -167,9 +213,10 @@
 </template>
 
 <script>
-  import rule from '../components/base/rule'
+  import rule from '../components/base/advancedRule'
   import {
     mdiPlus,
+    mdiDelete,
     mdiFormatLetterCase,
     mdiFormatLetterCaseLower,
   } from '@mdi/js'
@@ -181,6 +228,11 @@
       base: null,
       models: null,
 
+      deleteDialog: {
+        show: false,
+        loading: false,
+      },
+
       currentModel: null,
       modelText: null,
 
@@ -190,6 +242,7 @@
 
       icons: {
         mdiPlus,
+        mdiDelete,
         mdiFormatLetterCase,
         mdiFormatLetterCaseLower,
       },
@@ -224,6 +277,20 @@
       },
     }),
     computed: {
+      appendIcon () {
+        if (this.canAddBase) {
+          if (this.currentModel === null && (this.modelText === null || this.modelText === '')) {
+            return undefined
+          }
+          if (this.currentModel === null || this.modelText !== this.currentModel.name) {
+            return this.icons.mdiPlus
+          } else {
+            return this.icons.mdiDelete
+          }
+        }
+
+        return undefined
+      },
       baseIcon () {
         if (this.base === null) {
           return null
@@ -289,13 +356,21 @@
         ) {
           return this.rules.items
         } else {
+          const upperFilter = this.rules.filter.toUpperCase()
+
           return this.rules.items.filter(el => {
             if (this.rules.caseSensitive) {
-              return el.name.includes(this.rules.filter)
+              return el.targetValue.includes(this.rules.filter) ||
+                el.targetType.includes(this.rules.filter) ||
+                el.conditionType.includes(this.rules.filter) ||
+                el.conditionValue.includes(this.rules.filter) ||
+                el.error.includes(this.rules.filter)
             } else {
-              return el.name
-                .toUpperCase()
-                .includes(this.rules.filter.toUpperCase())
+              return el.targetValue.toUpperCase().includes(upperFilter) ||
+                el.targetType.toUpperCase().includes(upperFilter) ||
+                el.conditionType.toUpperCase().includes(upperFilter) ||
+                el.conditionValue.toUpperCase().includes(upperFilter) ||
+                el.error.toUpperCase().includes(upperFilter)
             }
           })
         }
@@ -359,7 +434,7 @@
 
           this.rules.items = this.currentModel.rules
           this.rules.items = this.rules.items.sort((a, b) => {
-            return a.name.localeCompare(b.name)
+            return a.targetValue.localeCompare(b.targetValue)
           })
 
           this.restrictions.hasRestrictions = this.currentModel.options.hasRestrictions
@@ -390,15 +465,6 @@
               })
             }
           }
-
-        // const constVariables = await this.axios.get(
-        //   `${
-        //     this.$store.state.mainUrl
-        //   }/constantVariables?filter={"where":{"${this.currentModel.base}":
-        //     "${this.currentModel.name}"},"order":"effectiveDate ASC"}`
-        // )
-
-        // this.constantVariables.items = constVariables.data
         } else {
           this.currentModel = null
           this.rules.items = []
@@ -413,8 +479,26 @@
           this.restrictions.table.selected = []
         }
       },
-      async addModel () {
+      async deleteModel () {
+        this.deleteDialog.loading = true
+        await this.axios.delete(`${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}`)
+
+        this.models = this.models.filter(el => {
+          return el.name !== this.currentModel.name
+        })
+
+        this.currentModel = null
+
+        this.deleteDialog.loading = false
+        this.deleteDialog.show = false
+      },
+      async addOrDeleteModel () {
         if (this.modelText === '' || this.modelText === null) {
+          return
+        }
+
+        if (this.currentModel !== null && this.modelText === this.currentModel.name) {
+          this.deleteDialog.show = true
           return
         }
 
@@ -448,8 +532,12 @@
         const rule = await this.axios.post(
           `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/rule`,
           {
-            name: data.name,
-            value: data.regex,
+            targetValue: data.targetValue,
+            targetType: data.targetType,
+            targetRegEx: data.targetRegEx,
+            conditionValue: data.conditionValue,
+            conditionType: data.conditionType,
+            conditionRegEx: data.conditionRegEx,
             error: data.errorMessage,
           },
         )
@@ -457,9 +545,8 @@
         if (rule !== undefined) {
           this.rules.items.push(rule.data)
           this.rules.items = this.rules.items.sort((a, b) => {
-            return a.name.localeCompare(b.name)
+            return a.targetValue.localeCompare(b.targetValue)
           })
-          data._this.reset()
         }
       },
       async deleteRule (data) {
@@ -479,8 +566,12 @@
           `${this.$store.state.mainUrl}/configurationModels/${this.currentModel.id}/rule`,
           {
             _id: data.id,
-            name: data.name,
-            value: data.regex,
+            targetValue: data.targetValue,
+            targetType: data.targetType,
+            targetRegEx: data.targetRegEx,
+            conditionValue: data.conditionValue,
+            conditionType: data.conditionType,
+            conditionRegEx: data.conditionRegEx,
             error: data.errorMessage,
           },
         )
