@@ -263,7 +263,10 @@
 
         if (this.local_type === 'list') {
           let diff = false
-          if (this.versions[this.current_version] === undefined) {
+          if (this.local_value === '') {
+            return true
+          }
+          if (this.versions[this.current_version] === undefined || this.versions[this.current_version] === null) {
             return true
           } else if (this.versions[this.current_version].length !== this.local_value.length) {
             return true

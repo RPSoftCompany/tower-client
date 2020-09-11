@@ -547,7 +547,7 @@
 
         this.configuration.items.forEach(variable => {
           if (variable.type === 'list') {
-            if (variable.versions[maxVersion] === undefined) {
+            if (variable.versions[maxVersion] === undefined || variable.versions[maxVersion] === null) {
               isDifferent = true
             } else if (variable.versions[maxVersion].length !== variable.value.length) {
               isDifferent = true
@@ -590,7 +590,7 @@
 
         this.configuration.items.forEach(variable => {
           if (variable.type === 'list') {
-            if (variable.versions[currVersion] === undefined) {
+            if (variable.versions[currVersion] === undefined || variable.versions[currVersion] === null) {
               isDifferent = true
             } else if (variable.versions[currVersion].length !== variable.value.length) {
               isDifferent = true
@@ -1211,6 +1211,13 @@
           return el.name === data.name
         })
 
+        const constVariable = this.defaultValues[data.name]
+
+        if (constVariable !== undefined) {
+          data.type = constVariable.type
+          data.value = constVariable.value
+        }
+
         const versions = new Array(this.configuration.versions.length)
 
         if (find === undefined) {
@@ -1308,6 +1315,10 @@
         this.configuration.items.map(el => {
           if (el.value === undefined || el.value === null) {
             el.value = ''
+          }
+
+          if (el.type === 'list' && el.value === '') {
+            el.value = []
           }
         })
 
