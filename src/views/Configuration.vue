@@ -136,6 +136,7 @@
         <v-spacer />
         <v-tooltip
           bottom
+          :open-delay="500"
         >
           <template v-slot:activator="{ on }">
             <v-icon
@@ -151,6 +152,7 @@
         <v-tooltip
           v-if="promoted.length > 0"
           bottom
+          :open-delay="500"
         >
           <template v-slot:activator="{ on }">
             <v-icon
@@ -165,6 +167,7 @@
         </v-tooltip>
         <v-tooltip
           v-if="configuration.items.length > 0"
+          :open-delay="500"
           bottom
         >
           <template v-slot:activator="{ on }">
@@ -271,6 +274,8 @@
             :type="item.type"
             :rules="item.rules"
             :all-type-rules="typeRules"
+            :forced="item.forced_value"
+            :add-if-absent="item.addIfAbsent"
             :added="true"
             :visible="item.visible"
             @change_row="changeConfigurationRow"
@@ -882,30 +887,30 @@
 
             const varMap = new Map()
 
-            // lastItem.forEach((el, i) => {
-            lastItem.variables.forEach(variable => {
-              if (varMap.has(variable.name)) {
-                const prop = varMap.get(variable.name)
-                prop.history[array.length - 1] = { value: variable.value, type: variable.type }
-                prop.value = variable.value
-                prop.type = variable.type
-                prop.forced = variable.forced
-                prop.addIfAbsent = variable.addIfAbsent
-                varMap.set(variable.name, prop)
-              } else {
-                const prop = {
-                  name: variable.name,
-                  value: variable.value,
-                  type: variable.type,
-                  forced: variable.forced,
-                  addIfAbsent: variable.addIfAbsent,
-                  history: [],
-                }
+            if (lastItem !== undefined) {
+              lastItem.variables.forEach(variable => {
+                if (varMap.has(variable.name)) {
+                  const prop = varMap.get(variable.name)
+                  prop.history[array.length - 1] = { value: variable.value, type: variable.type }
+                  prop.value = variable.value
+                  prop.type = variable.type
+                  prop.forced = variable.forced
+                  prop.addIfAbsent = variable.addIfAbsent
+                  varMap.set(variable.name, prop)
+                } else {
+                  const prop = {
+                    name: variable.name,
+                    value: variable.value,
+                    type: variable.type,
+                    forced: variable.forced,
+                    addIfAbsent: variable.addIfAbsent,
+                    history: [],
+                  }
 
-                varMap.set(variable.name, prop)
-              }
-            })
-            // })
+                  varMap.set(variable.name, prop)
+                }
+              })
+            }
 
             this.constantVariables.items = [...varMap.values()]
           }
@@ -1027,6 +1032,30 @@
           this.configuration.new = true
           this.configuration.configInfo =
             'Configuration not found, you can create new one'
+
+          const where = {}
+          this.values.forEach(el => {
+            where[el.base] = el.name
+          })
+
+          const constVariablesRes = await this.axios.get(`${this.$store.state.mainUrl
+          }/constantVariables/findLatest?filter=${JSON.stringify(where)}`)
+          if (constVariablesRes.status === 200 && constVariablesRes.data !== null) {
+            constVariablesRes.data.forEach(el => {
+              this.defaultValues[el.name] = el
+              if (el.addIfAbsent) {
+                this.configuration.items.push({
+                  name: el.name,
+                  force_cause: el.forced ? `Value forced by ${el.source}` : undefined,
+                  forced_value: el.forced,
+                  type: el.type,
+                  value: el.value,
+                  visible: true,
+                  versions: [],
+                })
+              }
+            })
+          }
         } else {
           this.configuration.configInfo = `Create new configuration, version #${configuration
             .data[0].version + 1}`
@@ -1127,7 +1156,7 @@
                 if (constVariable.forced) {
                   currentVariables[index].forced_value = true
                   currentVariables[index].value = constVariable.value
-                  currentVariables[index].force_cause = 'Value forced by constant variable'
+                  currentVariables[index].force_cause = `Value forced by ${constVariable.source}`
                 }
               } else {
                 if (constVariable.addIfAbsent) {
@@ -1138,7 +1167,7 @@
                   newVariable.versions = new Array(configuration.data[0].version)
                   if (constVariable.forced) {
                     newVariable.forced_value = true
-                    newVariable.force_cause = 'Value forced by constant variable'
+                    newVariable.force_cause = `Value forced by ${constVariable.source}`
                   }
 
                   currentVariables.push(newVariable)
@@ -1232,7 +1261,7 @@
           if (findDefault !== undefined && findDefault.forced) {
             item.value = findDefault.value
             item.forced_value = true
-            item.force_cause = 'Value forced by constant variable'
+            item.force_cause = `Value forced by ${findDefault.source}`
           }
 
           item.rules = this.baseRules.filter(baseRule => {
@@ -1416,7 +1445,7 @@
               if (findDefault !== undefined && findDefault.forced) {
                 variable.value = findDefault.value
                 variable.forced_value = true
-                variable.force_cause = 'Value forced by constant variable'
+                variable.force_cause = `Value forced by ${findDefault.source}`
               }
             })
           })
@@ -1570,12 +1599,58 @@
             }
           })
 
+          newArray.map(el => {
+            const defVariable = this.defaultValues[el.name]
+            if (defVariable !== undefined) {
+              if (defVariable.forced) {
+                el.forced_value = true
+                el.force_cause = `Value forced by ${defVariable.source}`
+                el.value = defVariable.value
+                el.type = defVariable.type
+              }
+            }
+          })
+
+          Object.getOwnPropertyNames(this.defaultValues).forEach(name => {
+            if (this.defaultValues[name].addIfAbsent) {
+              const found = newArray.find(el => {
+                return el.name === name
+              })
+
+              if (found === undefined) {
+                const element = {
+                  name: name,
+                  value: this.defaultValues[name].value,
+                  type: this.defaultValues[name].type,
+                  versions: new Array(this.configuration.maxVersion),
+                  forced_value: false,
+                }
+
+                const foundVersion = this.configuration.backupItems.find(el => {
+                  return el.name === name
+                })
+
+                if (foundVersion !== undefined) {
+                  element.versions = foundVersion.versions
+                }
+
+                if (this.defaultValues[name].forced) {
+                  element.forced_value = true
+                  element.force_cause = `Value forced by ${this.defaultValues[name].source}`
+                }
+
+                newArray.push(element)
+              }
+            }
+          })
+
           this.configuration.backupItems = newArray
           this.configuration.items = []
           this.slowlyAddItems(0)
 
           this.closeImportDialog()
         } catch (e) {
+          console.log(e)
           this.closeImportDialog()
           this.$store.commit('setError', 'Invalid JSON file')
         }
@@ -1615,6 +1690,51 @@
                 versions: new Array(this.configuration.maxVersion),
                 visible: true,
               })
+            }
+          })
+
+          newArray.map(el => {
+            const defVariable = this.defaultValues[el.name]
+            if (defVariable !== undefined) {
+              if (defVariable.forced) {
+                el.forced_value = true
+                el.force_cause = `Value forced by ${defVariable.source}`
+                el.value = defVariable.value
+                el.type = defVariable.type
+              }
+            }
+          })
+
+          Object.getOwnPropertyNames(this.defaultValues).forEach(name => {
+            if (this.defaultValues[name].addIfAbsent) {
+              const found = newArray.find(el => {
+                return el.name === name
+              })
+
+              if (found === undefined) {
+                const element = {
+                  name: name,
+                  value: this.defaultValues[name].value,
+                  type: this.defaultValues[name].type,
+                  versions: new Array(this.configuration.maxVersion),
+                  forced_value: false,
+                }
+
+                const foundVersion = this.configuration.backupItems.find(el => {
+                  return el.name === name
+                })
+
+                if (foundVersion !== undefined) {
+                  element.versions = foundVersion.versions
+                }
+
+                if (this.defaultValues[name].forced) {
+                  element.forced_value = true
+                  element.force_cause = `Value forced by ${this.defaultValues[name].source}`
+                }
+
+                newArray.push(element)
+              }
             }
           })
 

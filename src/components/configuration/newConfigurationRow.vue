@@ -46,6 +46,7 @@
         <v-text-field
           v-if="local_type === 'string'"
           v-model="local_value"
+          :readonly="forced"
           class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           label="value"
@@ -54,6 +55,7 @@
         <v-text-field
           v-if="local_type === 'Vault'"
           v-model="local_value"
+          :readonly="forced"
           class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           label="value"
@@ -62,6 +64,7 @@
         <v-textarea
           v-if="local_type === 'text'"
           v-model="local_value"
+          :readonly="forced"
           class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           rows="1"
@@ -71,6 +74,7 @@
         <v-text-field
           v-if="local_type === 'password'"
           v-model="local_value"
+          :readonly="forced"
           :type="pass_locked ? 'password' : 'text'"
           :append-icon="pass_locked ? icons.mdiLock : icons.mdiLockOpen"
           class="px-2 newConfigRow_thirdWidth"
@@ -86,6 +90,7 @@
         >
           <v-checkbox
             v-model="local_value"
+            :readonly="forced"
             color="lightblack"
             class="align-center justify-center"
             style="margin-top: 10px; width: 100%"
@@ -96,6 +101,7 @@
         <v-text-field
           v-if="local_type === 'number'"
           v-model="local_value"
+          :readonly="forced"
           class="px-2 newConfigRow_thirdWidth"
           autocomplete="off"
           label="value"
@@ -105,6 +111,7 @@
         <v-combobox
           v-if="local_type === 'list'"
           v-model="local_value"
+          :readonly="forced"
           style="margin-top: 8px;"
           class="px-2 newConfigRow_thirdWidth"
           dense
@@ -115,8 +122,8 @@
           append-icon
         />
         <v-icon
+          :disabled="addIfAbsent"
           class="newConfigRow_addRemoveIcon mr-3 mt-3 pb-0"
-
           @click="iconClicked"
           v-text="local_added ? icons.mdiMinus : icons.mdiPlus"
         />
@@ -164,6 +171,14 @@
         type: Array,
         default: () => { return [] },
         required: false,
+      },
+      forced: {
+        type: Boolean,
+        default: false,
+      },
+      addIfAbsent: {
+        type: Boolean,
+        default: false,
       },
     },
     data: attrs => ({
