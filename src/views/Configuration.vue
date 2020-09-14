@@ -1158,12 +1158,14 @@
                   currentVariables[index].value = constVariable.value
                   currentVariables[index].force_cause = `Value forced by ${constVariable.source}`
                 }
+                currentVariables[index].addIfAbsent = constVariable.addIfAbsent
               } else {
                 if (constVariable.addIfAbsent) {
                   const newVariable = {}
                   newVariable.name = constVariable.name
                   newVariable.type = constVariable.type
                   newVariable.value = constVariable.value
+                  newVariable.addIfAbsent = true
                   newVariable.versions = new Array(configuration.data[0].version)
                   if (constVariable.forced) {
                     newVariable.forced_value = true
