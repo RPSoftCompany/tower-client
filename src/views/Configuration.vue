@@ -1049,6 +1049,7 @@
                   force_cause: el.forced ? `Value forced by ${el.source}` : undefined,
                   forced_value: el.forced,
                   type: el.type,
+                  addIfAbsent: true,
                   value: el.value,
                   visible: true,
                   versions: [],
