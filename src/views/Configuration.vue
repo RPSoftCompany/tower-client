@@ -1075,6 +1075,10 @@
             })
           }
 
+          currentVariables.map(variable => {
+            variable.addIfAbsent = false
+          })
+
           configuration.data.forEach(conf => {
             conf.variables.forEach(variable => {
               const index = currentVariables.findIndex(el => {
