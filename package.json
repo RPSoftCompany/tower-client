@@ -11,7 +11,7 @@
     "@mdi/js": "^4.9.95",
     "axios": "^0.19.2",
     "core-js": "^3.6.5",
-    "highlight.js": "^9.18.1",
+    "highlight.js": "^10.4.1",
     "prism-core": "^2.0.2",
     "prismjs": "^1.21.0",
     "register-service-worker": "^1.7.1",
